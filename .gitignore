@@ -1,0 +1,20 @@
+# Binaires compilés
+bin/
+*.exe
+*.out
+cpu_task
+memory_task
+matrix_task
+sort_task
+
+# Credentials GCP — ne jamais commiter
+*.json.key
+service-account*.json
+.gcp/
+*.pem
+
+# Outils
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
