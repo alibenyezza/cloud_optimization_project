@@ -1,4 +1,4 @@
-vm
-cloudopt-vm1
-cloudopt-vm2
-cloudopt-vm3
+vm,machine_type,vcpu,ram_mb,price_per_hour_usd
+cloudopt-vm1,e2-highcpu-2,2,1976,0.0574
+cloudopt-vm2,e2-standard-2,2,7950,0.0777
+cloudopt-vm3,n2-standard-2,2,7950,0.1127
