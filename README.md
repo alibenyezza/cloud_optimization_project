@@ -114,3 +114,31 @@ Scripts utiles séparément :
 - TD2 : première VM GCP, comparaison local / cloud (`docs/write_up_TD2.txt`).
 - TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
 - TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
+
+## Rapport (Word)
+
+Le rapport est dans `docs/rapport_cloud_optimization.docx`. Les parties 3, 4, 5 et le début
+de la 10 sont faites (Maxime). Les parties marquées "A compléter" sont à écrire par chacun selon
+sa partie du projet.
+
+Règles d'écriture, pour que tout le rapport ait le même style :
+
+- En français.
+- Uniquement des caractères tapables sur un clavier AZERTY : accents et caractères spéciaux
+  du clavier oui, mais pas de tiret long, de flèche, de guillemets « », de œ ni de majuscule
+  accentuée. On écrit "-" , "->", "coeur", "A compléter".
+- Style minimaliste : court, clair, concis. Des phrases simples, on écrit "on".
+  Ça doit sonner comme nous, pas comme une IA.
+- Chaque choix technique est justifié avec son avantage ET son inconvénient.
+- Chaque chiffre vient d'une vraie mesure (experiments.csv, results.csv, profiles.csv),
+  jamais d'une estimation.
+- Les limites et les résultats inattendus sont expliqués, pas cachés.
+- On garde le plan en 11 parties : c'est celui que demande le sujet pour la soutenance.
+- Objectif : chaque partie doit répondre à un critère de la grille de notation (fin du sujet).
+
+Un fichier Word ne se fusionne pas avec git. Pour ne pas perdre de travail :
+
+1. Prévenir les autres avant de l'ouvrir ("je prends le Word").
+2. `git pull` avant de commencer.
+3. Faire ses modifications.
+4. `git add`, `git commit`, `git push` tout de suite, puis prévenir que c'est libre.
