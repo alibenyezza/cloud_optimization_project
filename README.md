@@ -6,7 +6,7 @@ pilotées depuis une machine contrôleur (PC sous Ubuntu/WSL).
 ## Infrastructure
 
 - Projet GCP : `cloud-optimization-511007`
-- Zone : `europe-west1-b`
+- Zone : `europe-west9-b`
 - VMs : `cloudopt-vm1`, `cloudopt-vm2`, `cloudopt-vm3` (e2-small, Debian 12)
 - Workloads : `cpu_task`, `matrix_task`, `memory_task`, `sort_task` (dans `bin/`)
 
@@ -25,7 +25,7 @@ changer de placement = modifier uniquement la colonne `vm` du CSV.
 ## Utilisation
 
 1. Démarrer les VMs si elles sont arrêtées :
-   `gcloud compute instances start cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west1-b`
+   `gcloud compute instances start cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west9-b`
 2. Déployer les binaires : `./scripts/deploy_all.sh`
 3. Éditer `data/allocation_manual.csv` (format `task_id,workload,size,vm`)
 4. Lancer : `./scripts/run_all.sh` (ou `./scripts/run_all.sh autre_fichier.csv`)
@@ -51,7 +51,7 @@ Vérifier que chaque tâche a tourné sur la bonne VM :
 ## Fin de session
 
 Arrêter les VMs pour économiser les crédits :
-`gcloud compute instances stop cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west1-b`
+`gcloud compute instances stop cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west9-b`
 
 ## TD4 – Scheduler Round-Robin (baseline)
 
@@ -69,7 +69,7 @@ Reproduire le workflow :
     ./scripts/run_all.sh data/allocation_rr.csv
 
 Sans argument, run_all.sh utilise toujours data/allocation_manual.csv.
-Les VMs sont en europe-west1-b ; déployer les binaires avec ./scripts/deploy_all.sh.
+Les VMs sont en europe-west9-b ; déployer les binaires avec ./scripts/deploy_all.sh.
 
 Round-Robin est une baseline de référence, pas la stratégie d'optimisation finale :
 il ignore la charge des tâches, la capacité des VMs et le coût.

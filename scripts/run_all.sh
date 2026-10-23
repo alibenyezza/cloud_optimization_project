@@ -2,7 +2,7 @@
 # Lit le fichier d'allocation et lance une tâche par ligne, en arrière-plan.
 # Usage : ./scripts/run_all.sh [fichier_allocation.csv]
 
-ZONE="europe-west1-b"
+source "$(dirname "$0")/config.sh"
 ALLOC="${1:-data/allocation_manual.csv}"
 
 if [ ! -f "$ALLOC" ]; then
