@@ -1,5 +1,3 @@
-# Le code est destiné à tourner sur Linux (WSL + VMs GCP).
-# On force LF partout pour éviter les "bad interpreter: ^M" sur les VMs.
 * text=auto eol=lf
-
+*.xlsx binary
 *.pdf binary

@@ -1,0 +1,37 @@
+=== uname -a ===
+Linux portableLenovo 6.6.87.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 5 18:30:46 UTC 2025 x86_64 GNU/Linux
+
+=== lscpu ===
+Architecture:             x86_64
+CPU(s):                   16
+On-line CPU(s) list:      0-15
+Vendor ID:                AuthenticAMD
+Model name:                AMD Ryzen 7 7435HS
+Thread(s) per core:       2
+Core(s) per socket:       8
+Socket(s):                1
+Caches (sum of all):
+  L1d: 256 KiB (8 instances)
+  L1i: 256 KiB (8 instances)
+  L2:  4 MiB (8 instances)
+  L3:  16 MiB (1 instance)
+
+=== nproc ===
+16
+
+=== free -h ===
+               total        used        free      shared  buff/cache   available
+Mem:            11Gi       761Mi        10Gi       6.1Mi       291Mi        10Gi
+Swap:          3.0Gi          0B       3.0Gi
+
+=== lsblk ===
+NAME MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda    8:0    0 388.6M  1 disk
+sdb    8:16   0   186M  1 disk
+sdc    8:32   0     3G  0 disk [SWAP]
+sdd    8:48   0     1T  0 disk /mnt/wslg/distro
+                               /
+sde    8:64   0   151M  0 disk
+
+=== go version ===
+go version go1.26.0 linux/amd64

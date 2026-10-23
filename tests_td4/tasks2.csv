@@ -1,0 +1,3 @@
+task_id,workload,size
+T1,cpu_task,500000
+T2,cpu_task,1000000

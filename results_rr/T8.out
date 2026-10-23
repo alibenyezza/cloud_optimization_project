@@ -1,0 +1,2 @@
+host: cloudopt-vm2.europe-west1-b.c.cloud-optimization-511007.internal
+{"task":"memory_task","size_mb":256,"runtime_s":0.392236051,"checksum":18365070715578744832,"alloc_mb":256.0598373413086}

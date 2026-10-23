@@ -1,0 +1,202 @@
+WRITE-UP TD3 - Orchestration distribuée sur Compute Engine
+============================================================
+
+L'IDÉE EN UNE PHRASE
+--------------------
+Au TD2, on faisait tourner nos programmes sur UNE VM dans le cloud.
+Au TD3, on a lancé plein de tâches en même temps sur TROIS VMs, depuis notre PC,
+et on a récupéré automatiquement les résultats de chacune.
+
+Notre PC (Ubuntu/WSL) = le "contrôleur" : il donne les ordres.
+Les 3 VMs Google Cloud = les "workers" : elles exécutent les tâches.
+
+
+1. CRÉATION DES 3 VMs
+---------------------
+On a créé 3 petites VMs (e2-small, Debian 12) dans la même zone (Paris) :
+
+    for vm in cloudopt-vm1 cloudopt-vm2 cloudopt-vm3; do
+      gcloud compute instances create $vm --zone=europe-west9-b \
+        --machine-type=e2-small --image-family=debian-12 --image-project=debian-cloud
+    done
+
+La boucle "for" évite de taper 3 fois la même commande.
+
+
+2. ENVOI DES PROGRAMMES SUR LES VMs (deploy_all.sh)
+---------------------------------------------------
+Les VMs sont vides au départ. On copie notre dossier bin/ (cpu_task, matrix_task,
+memory_task, sort_task) sur chacune :
+
+    gcloud compute scp --recurse bin $VM:~/cloud-optimization/ --zone=$ZONE
+    gcloud compute ssh $VM --zone=$ZONE --command="chmod +x ~/cloud-optimization/bin/*"
+
+- scp = copier un fichier vers une machine distante
+- chmod +x = rendre le fichier exécutable (sinon Linux refuse de le lancer)
+
+On a mis ça dans un script scripts/deploy_all.sh pour pouvoir redéployer en une commande.
+
+
+3. LANCER UNE TÂCHE À DISTANCE
+------------------------------
+Pour exécuter un programme sur une VM depuis notre PC :
+
+    gcloud compute ssh cloudopt-vm1 --zone=europe-west9-b \
+      --command="cd ~/cloud-optimization && ./bin/cpu_task --size 500000"
+
+Résultat : {"task":"cpu_task","size":500000,"runtime_s":0.139,...}
+
+PROBLÈME : le terminal reste bloqué tant que la tâche tourne.
+Si on enchaîne 9 commandes comme ça, elles s'exécutent l'une après l'autre.
+Tout le TD consiste à éviter ça.
+
+
+4. LE SCRIPT run_task.sh : UNE TÂCHE SUR UNE VM
+-----------------------------------------------
+Usage : ./scripts/run_task.sh T1 cpu_task 500000 cloudopt-vm1 europe-west9-b
+
+    #!/usr/bin/env bash
+    if [ "$#" -ne 5 ]; then
+      echo "Usage: $0 TASK_ID WORKLOAD SIZE VM ZONE" >&2
+      exit 2
+    fi
+    TASK_ID="$1"; WORKLOAD="$2"; SIZE="$3"; VM="$4"; ZONE="$5"
+    mkdir -p results
+    echo "[$TASK_ID] lancement : $WORKLOAD --size $SIZE sur $VM"
+
+    gcloud compute ssh "$VM" --zone="$ZONE" --quiet \
+      --command="echo host: \$(hostname); cd ~/cloud-optimization && ./bin/$WORKLOAD --size $SIZE" \
+      > "results/$TASK_ID.out" 2> "results/$TASK_ID.err" < /dev/null
+    CODE=$?
+
+    echo "$TASK_ID,$WORKLOAD,$SIZE,$VM,$CODE" > "results/$TASK_ID.status"
+    if [ "$CODE" -eq 0 ]; then echo "[$TASK_ID] OK"
+    else echo "[$TASK_ID] ECHEC (code $CODE), voir results/$TASK_ID.err" >&2; fi
+    exit "$CODE"
+
+Ce qu'il faut comprendre :
+- $1 à $5 = les arguments donnés au script, $# = leur nombre.
+- "> fichier"  : la sortie normale du programme va dans T1.out au lieu de l'écran.
+- "2> fichier" : les erreurs vont dans T1.err.
+- "echo host: \$(hostname)" : la VM écrit son propre nom en première ligne de T1.out.
+  Ça PROUVE sur quelle machine la tâche a tourné.
+- $? = le code de retour de la dernière commande. 0 = succès, autre chose = échec.
+  On l'enregistre dans T1.status pour ne jamais ignorer un échec.
+
+
+5. LANCER EN PARALLÈLE : & ET wait
+----------------------------------
+    ./scripts/run_task.sh T1 ... &
+    ./scripts/run_task.sh T2 ... &
+    ./scripts/run_task.sh T3 ... &
+    wait
+
+- "&" à la fin = "lance ça en arrière-plan et passe tout de suite à la suite".
+- "wait" = "maintenant attends que tout ce qui a été lancé soit fini".
+
+Preuve que ça marche : les tâches finissaient dans le désordre (T2, T3, puis T1),
+alors que T1 avait été lancée en premier.
+
+
+6. LE FICHIER D'ALLOCATION (data/allocation_manual.csv)
+-------------------------------------------------------
+La liste des tâches est séparée des scripts. Une ligne = une tâche :
+
+    task_id,workload,size,vm
+    T1,cpu_task,500000,cloudopt-vm1
+    T2,cpu_task,1000000,cloudopt-vm2
+    T3,memory_task,256,cloudopt-vm3
+    T4,matrix_task,400,cloudopt-vm1
+    ... (9 tâches au total)
+
+Pour changer où tournent les tâches, on modifie juste la colonne "vm".
+On ne touche jamais aux scripts.
+
+
+7. LE SCRIPT run_all.sh : TOUT LANCER
+-------------------------------------
+Il lit le CSV et lance run_task.sh pour chaque ligne, en arrière-plan.
+
+    #!/usr/bin/env bash
+    ZONE="europe-west9-b"
+    ALLOC="${1:-data/allocation_manual.csv}"
+
+    # (vérifs : le fichier existe, pas de task_id en double)
+
+    mkdir -p results
+    rm -f results/*.out results/*.err results/*.status
+
+    N=0
+    while IFS=, read -r task_id workload size vm; do
+      [ -z "$task_id$workload$size$vm" ] && continue      # ligne vide
+      ./scripts/run_task.sh "$task_id" "$workload" "$size" "$vm" "$ZONE" < /dev/null &
+      N=$((N + 1))
+    done < <(tail -n +2 "$ALLOC" | tr -d '\r')
+
+    echo "$N tâches lancées, attente de la fin..."
+    wait
+    echo "All tasks completed"
+    # + bilan : on compte les .status dont le code n'est pas 0
+
+Les points importants :
+- tail -n +2 : on saute la 1re ligne du CSV (l'en-tête).
+- IFS=, read : on découpe chaque ligne sur les virgules en 4 variables.
+- UN SEUL wait, APRÈS la boucle. Un wait dans la boucle = retour au séquentiel.
+- "< /dev/null" : sans ça, gcloud "avale" la suite du CSV et seule T1 est lancée.
+- "< <(...)" au lieu d'un pipe "|" : avec un pipe, la boucle tourne dans un
+  processus séparé et le wait n'attendrait rien.
+- tr -d '\r' : enlève les fins de ligne Windows si le CSV a été modifié sous Excel.
+
+
+8. RÉSULTATS
+------------
+- 9 tâches lancées, 9 OK. Les messages "lancement" et "OK" arrivent dans le désordre :
+  c'est bien du parallèle.
+- Chaque tâche a son T?.out, T?.err et T?.status dans results/.
+- Vérification que chaque tâche a tourné sur la bonne VM :
+
+    T1 prévu=cloudopt-vm1 réel=cloudopt-vm1
+    T2 prévu=cloudopt-vm2 réel=cloudopt-vm2
+    ... (9/9 identiques)
+
+- Plusieurs tâches sur la même VM : avec des tailles plus grosses, on a regardé la VM1
+  avec "ps aux" pendant l'exécution. On a vu 3 programmes tourner en même temps
+  (60% + 76% + 61% de CPU ≈ 200%). La VM a 2 processeurs, donc Linux les partage
+  entre les 3 tâches. On n'a rien eu à programmer pour ça.
+
+- Changement d'allocation : on a réparti autrement les tâches (3 par VM) en
+  modifiant uniquement le CSV. Tout a marché sans toucher aux scripts.
+
+
+9. LES ERREURS (ET CE QU'ELLES NOUS ONT APPRIS)
+-----------------------------------------------
+Le système ne cache jamais un échec. On en a rencontré 3 types :
+
+- Code 127 : programme introuvable. On l'a provoqué exprès avec une tâche
+  "fake_task". T2.err contenait "No such file or directory", les autres tâches
+  ont quand même réussi, et run_all.sh a renvoyé 1.
+- Code 130 : tâche interrompue avec Ctrl+C.
+- Code 255 : la connexion SSH a échoué ("Connection refused"). On avait lancé les
+  tâches juste après avoir rallumé les VMs : le service SSH n'était pas encore prêt.
+  Une minute plus tard, tout marchait.
+
+On a aussi eu une ligne vide en fin de CSV : le script l'ignore maintenant.
+
+
+10. NETTOYAGE
+-------------
+Pour ne pas consommer de crédits, on a supprimé les VMs :
+
+    gcloud compute instances delete cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west9-b
+    gcloud compute instances list   -> Listed 0 items.
+    gcloud compute disks list       -> Listed 0 items.
+
+Les résultats ne sont pas perdus : ils ont toujours été écrits directement sur notre PC.
+
+
+À RETENIR
+---------
+- & = lancer sans attendre. wait = attendre tout à la fin, une seule fois.
+- Une tâche = une connexion SSH indépendante.
+- Le CSV dit QUOI et OÙ, les scripts disent COMMENT. On change l'un sans l'autre.
+- Le code de retour (0, 127, 130, 255...) permet de savoir si et pourquoi ça a raté.
