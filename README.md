@@ -1,75 +1,116 @@
-# Cloud Optimization – Exécution distribuée (TD3)
+# Cloud Optimization – Ordonnancement de tâches sur GCP avec NSGA-II
 
-Exécution de tâches indépendantes sur plusieurs VMs Google Compute Engine,
-pilotées depuis une machine contrôleur (PC sous Ubuntu/WSL).
+Projet semestriel ESILV A5 CCC. Question centrale : **étant donné des tâches et des VMs,
+où exécuter chaque tâche ?** On compare une allocation de référence (Round-Robin) à une
+allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : makespan et coût).
+
+## Architecture
+
+    tasks.csv + machines.csv + profiles.csv
+                    |
+                    v
+       SCHEDULER (Round-Robin ou NSGA-II)
+                    |
+                    v
+             allocation_*.csv
+                    |
+                    v
+    ORCHESTRATEUR (run_experiment.sh -> run_all.sh -> run_task.sh)
+          |              |              |
+          v              v              v
+    cloudopt-vm1   cloudopt-vm2   cloudopt-vm3
+          \              |              /
+           v             v             v
+    results/<id>/results.csv + gantt.svg  ->  data/experiments.csv
+
+- **Workloads** (`workloads/`) : programmes Go compilés (cpu_task, memory_task, matrix_task, sort_task).
+- **Scheduler** (`scheduler/`) : décide sur quelle VM tourne chaque tâche. Ne lance rien.
+- **Orchestrateur** (`scripts/`) : exécute une allocation en parallèle par SSH et collecte les résultats.
+  Il ne prend aucune décision : n'importe quelle allocation au bon format peut être exécutée.
+
+Les formats de tous les fichiers sont définis dans **[docs/INTERFACES.md](docs/INTERFACES.md)**.
 
 ## Infrastructure
 
-- Projet GCP : `cloud-optimization-511007`
-- Zone : `europe-west9-b`
-- VMs : `cloudopt-vm1`, `cloudopt-vm2`, `cloudopt-vm3` (e2-small, Debian 12)
-- Workloads : `cpu_task`, `matrix_task`, `memory_task`, `sort_task` (dans `bin/`)
+Projet GCP `cloud-optimization-511007`, zone `europe-west9-b` (Paris), image Debian 12.
+Zone et projet sont définis une seule fois dans `scripts/config.sh`.
 
-## Organisation
+| VM | Type | vCPU | RAM (Linux) | CPU |
+|---|---|---|---|---|
+| cloudopt-vm1 | e2-highcpu-2 | 2 | 1976 Mo | Xeon 2.20 GHz |
+| cloudopt-vm2 | e2-standard-2 | 2 | 7950 Mo | Xeon 2.20 GHz |
+| cloudopt-vm3 | n2-standard-2 | 2 | 7950 Mo | Xeon 2.80 GHz |
 
-    bin/                        exécutables des workloads
-    data/allocation_manual.csv  liste des tâches et VM choisie pour chacune
-    scripts/deploy_all.sh       copie bin/ sur toutes les VMs
-    scripts/run_task.sh         exécute UNE tâche sur UNE VM
-    scripts/run_all.sh          lance toutes les tâches du CSV en parallèle
-    results/                    un .out, un .err et un .status par tâche
+Les VMs sont volontairement hétérogènes : vm1 est peu chère mais limitée en mémoire,
+vm3 a un CPU plus rapide mais coûte plus cher. Fiches détaillées : `data/machine_<vm>.txt`.
+Prix horaires : `data/machines.csv` (estimation de la console GCP divisée par 730 h).
 
-L'allocation (quoi / où) est séparée de l'exécution (comment) :
-changer de placement = modifier uniquement la colonne `vm` du CSV.
+## Arborescence
 
-## Utilisation
+    workloads/      sources Go des 4 workloads
+    scheduler/      round_robin.go (baseline) ; NSGA-II à venir
+    tools/gantt/    génération de la timeline SVG d'une expérience
+    scripts/        config.sh, create_vms.sh, deploy_all.sh, run_task.sh, run_all.sh,
+                    collect_results.sh, run_experiment.sh, delete_vms.sh, benchmark.sh
+    data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
+    results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
+    docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3
+    bin/            exécutables compilés (non versionnés)
 
-1. Démarrer les VMs si elles sont arrêtées :
-   `gcloud compute instances start cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west9-b`
-2. Déployer les binaires : `./scripts/deploy_all.sh`
-3. Éditer `data/allocation_manual.csv` (format `task_id,workload,size,vm`)
-4. Lancer : `./scripts/run_all.sh` (ou `./scripts/run_all.sh autre_fichier.csv`)
+## Prérequis
 
-`run_all.sh` lance chaque tâche en arrière-plan (`&`), sans attendre la précédente,
-puis attend la fin de toutes avec un seul `wait`. Plusieurs tâches sur la même VM
-s'exécutent en même temps ; l'OS de la VM partage le CPU entre elles.
+Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
+(`gcloud auth login --no-launch-browser` sous WSL, puis `gcloud config set project cloud-optimization-511007`).
 
-## Résultats et validation
+## Reproduire une expérience
 
-Pour chaque tâche : `results/TX.out` (sortie, 1re ligne = nom de la VM réelle),
-`results/TX.err` (erreurs) et `results/TX.status` (`task_id,workload,size,vm,code_retour`).
-
-`run_all.sh` affiche un bilan et renvoie 1 si une tâche a échoué.
-
-Vérifier que chaque tâche a tourné sur la bonne VM :
-
-    tail -n +2 data/allocation_manual.csv | while IFS=, read -r id w s vm; do
-      [ -z "$id" ] && continue
-      echo "$id prévu=$vm réel=$(grep host results/$id.out | cut -d' ' -f2)"
-    done
-
-## Fin de session
-
-Arrêter les VMs pour économiser les crédits :
-`gcloud compute instances stop cloudopt-vm1 cloudopt-vm2 cloudopt-vm3 --zone=europe-west9-b`
-
-## TD4 – Scheduler Round-Robin (baseline)
-
-Le scheduler décide sur quelle VM chaque tâche s'exécute ; l'orchestrateur du TD3 (run_all.sh / run_task.sh) l'exécute sans modification d'architecture.
-
-Fichiers d'entrée :
-- data/tasks.csv : tâches à exécuter (task_id,workload,size), sans VM
-- data/machines.csv : VMs disponibles (vm), dans l'ordre du Round-Robin
-
-Compilation :
+    # 1. Compiler
+    for w in cpu_task memory_task matrix_task sort_task; do go build -o bin/$w workloads/$w.go; done
     go build -o bin/round_robin_scheduler scheduler/round_robin.go
+    go build -o bin/gantt tools/gantt/main.go
 
-Reproduire le workflow :
+    # 2. Créer les VMs décrites dans data/machines.csv, puis déployer les binaires
+    ./scripts/create_vms.sh
+    sleep 60                      # laisser démarrer SSH (sinon code 255)
+    ./scripts/deploy_all.sh
+
+    # 3. Calculer une allocation (ici la baseline Round-Robin)
     ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
-    ./scripts/run_all.sh data/allocation_rr.csv
 
-Sans argument, run_all.sh utilise toujours data/allocation_manual.csv.
-Les VMs sont en europe-west9-b ; déployer les binaires avec ./scripts/deploy_all.sh.
+    # 4. Exécuter, collecter et tracer la timeline (ici 3 répétitions)
+    ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
 
-Round-Robin est une baseline de référence, pas la stratégie d'optimisation finale :
-il ignore la charge des tâches, la capacité des VMs et le coût.
+    # 5. Supprimer les VMs en fin de session (elles coûtent même inactives)
+    ./scripts/delete_vms.sh
+
+Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
+- `allocation.csv` : l'allocation exacte exécutée ;
+- `<TASK>.out`, `.err`, `.status` : sortie, erreurs, code de retour et horaires de chaque tâche ;
+- `results.csv` : une ligne par tâche, temps relatifs au début de l'expérience ;
+- `gantt.svg` : timeline (une bande par VM, tâches simultanées empilées, échecs en rouge).
+
+`data/experiments.csv` reçoit une ligne par expérience : makespan réel, coût réel,
+valeurs prédites, nombre de tâches et d'échecs. C'est la base de la comparaison Round-Robin / NSGA-II.
+
+Scripts utiles séparément :
+- `./scripts/run_all.sh ALLOCATION.csv [EXPERIMENT_ID]` : exécution seule ;
+- `./scripts/collect_results.sh EXPERIMENT_ID STRATEGY` : collecte seule ;
+- `./bin/gantt results/<id>/results.csv sortie.svg` : timeline seule.
+
+## Mesure : points de vigilance
+
+- **Surcoût SSH d'environ 3 s par tâche** (mesuré) : les horaires sont pris sur le PC contrôleur,
+  connexion SSH comprise. Le scénario utilise donc des tâches de 30 s à 2 min, pour que ce surcoût
+  reste faible devant le calcul. Le temps de calcul pur reste disponible (`runtime_s`).
+- **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; l'OS les répartit
+  sur les vCPU. Le modèle de prédiction en tient compte (voir INTERFACES.md).
+- **Variabilité** : un même scénario varie d'environ 1 à 2 % d'une exécution à l'autre ;
+  chaque stratégie est donc répétée plusieurs fois.
+- **Validation** : chaque `.out` commence par `host: <nom de la VM>`, ce qui prouve où la tâche a tourné.
+
+## Historique
+
+- TD1 : benchmarks locaux (`docs/write_up_TD1.txt`).
+- TD2 : première VM GCP, comparaison local / cloud (`docs/write_up_TD2.txt`).
+- TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
+- TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
