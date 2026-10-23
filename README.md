@@ -43,7 +43,7 @@ Zone et projet sont définis une seule fois dans `scripts/config.sh`.
 
 Les VMs sont volontairement hétérogènes : vm1 est peu chère mais limitée en mémoire,
 vm3 a un CPU plus rapide mais coûte plus cher. Fiches détaillées : `data/machine_<vm>.txt`.
-Prix horaires : `data/machines.csv` (estimation de la console GCP divisée par 730 h).
+Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevés le 23/10/2026 sur gcloud-compute.com (à recouper avec la console GCP).
 
 ## Arborescence
 
