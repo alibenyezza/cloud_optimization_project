@@ -1,0 +1,6 @@
+host: cloudopt-vm1
+vcpu: 2
+Mem:            1976         373        1413           0         327        1602
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+Thread(s) per core:                      2
+Core(s) per socket:                      1
