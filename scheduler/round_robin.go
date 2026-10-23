@@ -26,7 +26,7 @@ func readCSV(path string, expectedHeader []string) ([][]string, error) {
 	if len(records) == 0 {
 		return nil, fmt.Errorf("%s is empty", path)
 	}
-	if len(records[0]) != len(expectedHeader) {
+	if len(records[0]) < len(expectedHeader) {
 		return nil, fmt.Errorf("%s: expected columns %s", path, strings.Join(expectedHeader, ","))
 	}
 	for i, name := range expectedHeader {
