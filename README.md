@@ -128,7 +128,7 @@ Règles d'écriture, pour que tout le rapport ait le même style :
   du clavier oui, mais pas de tiret long, de flèche, de guillemets « », de œ ni de majuscule
   accentuée. On écrit "-" , "->", "coeur", "A compléter".
 - Style minimaliste : court, clair, concis. Des phrases simples, on écrit "on".
-  Ça doit sonner comme nous, pas comme une IA.
+  Le texte doit sonner comme nous, pas comme une IA.
 - Chaque choix technique est justifié avec son avantage ET son inconvénient.
 - Chaque chiffre vient d'une vraie mesure (experiments.csv, results.csv, profiles.csv),
   jamais d'une estimation.
