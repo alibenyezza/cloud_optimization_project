@@ -15,7 +15,7 @@ de quelqu'un.
 
 ## Ce qui marche déjà
 
-- 3 VMs différentes en europe-west9-b : vm1 (e2-highcpu-2, peu de RAM, pas chère),
+- 3 VMs différentes en europe-west9-a : vm1 (e2-highcpu-2, peu de RAM, pas chère),
   vm2 (e2-standard-2), vm3 (n2-standard-2, CPU plus rapide, plus chère).
 - On lance une allocation, ça tourne en parallèle sur les VMs, et on récupère le makespan,
   le coût et une timeline (gantt.svg) pour chaque expérience.

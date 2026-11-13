@@ -32,7 +32,7 @@ Les formats de tous les fichiers sont définis dans **[docs/INTERFACES.md](docs/
 
 ## Infrastructure
 
-Projet GCP `cloud-optimization-511007`, zone `europe-west9-b` (Paris), image Debian 12.
+Projet GCP `cloud-optimization-511007`, zone `europe-west9-a` (Paris), image Debian 12.
 Zone et projet sont définis une seule fois dans `scripts/config.sh`.
 
 | VM | Type | vCPU | RAM (Linux) | CPU |
@@ -50,8 +50,10 @@ Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevé
     workloads/      sources Go des 4 workloads
     scheduler/      round_robin.go (baseline) ; NSGA-II à venir
     tools/gantt/    génération de la timeline SVG d'une expérience
+    tools/predict/  makespan, coût et mémoire prévus d'une allocation (modèle de INTERFACES.md)
     scripts/        config.sh, create_vms.sh, deploy_all.sh, run_task.sh, run_all.sh,
-                    collect_results.sh, run_experiment.sh, delete_vms.sh, benchmark.sh
+                    collect_results.sh, run_experiment.sh, delete_vms.sh, benchmark.sh,
+                    benchmark_vms.sh, make_profiles.sh
     data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
     results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
     docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3
@@ -68,19 +70,26 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
     for w in cpu_task memory_task matrix_task sort_task; do go build -o bin/$w workloads/$w.go; done
     go build -o bin/round_robin_scheduler scheduler/round_robin.go
     go build -o bin/gantt tools/gantt/main.go
+    go build -o bin/predict tools/predict/main.go
 
     # 2. Créer les VMs décrites dans data/machines.csv, puis déployer les binaires
     ./scripts/create_vms.sh
     sleep 60                      # laisser démarrer SSH (sinon code 255)
     ./scripts/deploy_all.sh
 
-    # 3. Calculer une allocation (ici la baseline Round-Robin)
+    # 3. Mesurer chaque tâche de tasks.csv sur chaque type de VM (5 fois), puis faire profiles.csv
+    #    (environ 20 min ; inutile si profiles.csv est déjà à jour pour ce tasks.csv)
+    ./scripts/benchmark_vms.sh 5
+    ./scripts/make_profiles.sh
+
+    # 4. Calculer une allocation (ici la baseline Round-Robin) et sa prédiction
     ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
+    ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_rr.csv
 
-    # 4. Exécuter, collecter et tracer la timeline (ici 3 répétitions)
-    ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
+    # 5. Exécuter, collecter et tracer la timeline (3 répétitions), avec makespan et coût prévus
+    ./scripts/run_experiment.sh data/allocation_rr.csv rr 3 MAKESPAN_PREVU COUT_PREVU
 
-    # 5. Supprimer les VMs en fin de session (elles coûtent même inactives)
+    # 6. Supprimer les VMs en fin de session (elles coûtent même inactives)
     ./scripts/delete_vms.sh
 
 Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
@@ -114,6 +123,7 @@ Scripts utiles séparément :
 - TD2 : première VM GCP, comparaison local / cloud (`docs/write_up_TD2.txt`).
 - TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
 - TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
+- Partie B : scénario final, mesures sur les 3 types de VM, `profiles.csv` et validation du modèle (`docs/write_up_partie_B.txt`).
 
 ## Rapport (Word)
 

@@ -6,13 +6,13 @@ Tout changement de format = une pull request qui modifie AUSSI ce fichier, relue
 | Rôle | Membre | Produit | Utilise |
 |---|---|---|---|
 | A : infra et orchestrateur | Maxime | machines.csv, .status, results.csv, experiments.csv | allocations |
-| B : benchmarks et modèle | ? | profiles.csv, fonction d'évaluation, validation prédit/réel | machines.csv |
+| B : benchmarks et modèle | Ali | profiles.csv, fonction d'évaluation, validation prédit/réel | machines.csv |
 | C : NSGA-II | ? | pareto.csv, sol_*.csv, allocation_nsga.csv | tasks, machines, profiles |
 
 ## Conventions
 - Séparateur virgule, POINT décimal, une ligne d'en-tête, fins de ligne LF.
 - Unités dans le nom des colonnes : _s, _kb, _mb, _usd.
-- Zone et projet : uniquement dans scripts/config.sh (europe-west9-b).
+- Zone et projet : uniquement dans scripts/config.sh (europe-west9-a).
 
 ## Infrastructure (data/machines.csv) – A
     vm,machine_type,vcpu,ram_mb,price_per_hour_usd
@@ -31,6 +31,8 @@ Choisir des tailles donnant 30 s à 2 min de calcul par tâche, sinon on mesure 
     workload,size,machine_type,runs,mean_runtime_s,median_runtime_s,std_runtime_s,max_rss_kb
 Chaque (workload, size) de tasks.csv doit être mesuré sur CHAQUE machine_type.
 Le modèle utilise median_runtime_s (robuste aux pics). Temps = runtime_s du JSON.
+Mesures brutes : data/benchmark_<machine_type>.csv (scripts/benchmark_vms.sh),
+puis profiles.csv avec scripts/make_profiles.sh.
 
 ## Allocation (data/allocation_*.csv) – scheduler -> orchestrateur
     task_id,workload,size,vm
@@ -59,6 +61,8 @@ run_all.sh lance en même temps toutes les tâches d'une VM ; l'OS partage les v
     coût     = somme sur les VMs de price_per_hour_usd / 3600 * fin(VM)
     mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)
 En Go : allocation[i] = indice de la VM de la tâche i (c'est aussi le chromosome NSGA-II).
+Implémenté dans tools/predict/main.go (B). Dernière ligne affichée :
+    prediction,<makespan_s>,<cost_usd>,<mem_violation_mb>
 
 ## Branches git
 prod-<prénom> pour travailler, pull request relue par un autre membre pour fusionner.
