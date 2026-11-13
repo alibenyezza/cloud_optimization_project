@@ -1,6 +1,4 @@
-// TD4 Round-Robin baseline scheduler (implémentation de référence du sujet).
-// Go standard library only; no GCP dependency is needed to generate allocations.
-//
+// TD4 Round-Robin baseline scheduler (Go standard library only).
 // Build: go build -o bin/round_robin_scheduler scheduler/round_robin.go
 // Run:   ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
 package main
@@ -28,7 +26,7 @@ func readCSV(path string, expectedHeader []string) ([][]string, error) {
 	if len(records) == 0 {
 		return nil, fmt.Errorf("%s is empty", path)
 	}
-	if len(records[0]) != len(expectedHeader) {
+	if len(records[0]) < len(expectedHeader) {
 		return nil, fmt.Errorf("%s: expected columns %s", path, strings.Join(expectedHeader, ","))
 	}
 	for i, name := range expectedHeader {
@@ -68,7 +66,7 @@ func schedule(tasks [][]string, machines [][]string) ([][]string, error) {
 			return nil, fmt.Errorf("duplicate task ID %q", id)
 		}
 		seenTasks[id] = true
-		// Affectation circulaire : la tâche i va sur la VM i modulo le nombre de VM.
+
 		vm := vmNames[i%len(vmNames)]
 		assigned = append(assigned, []string{id, workload, size, vm})
 	}
@@ -79,6 +77,7 @@ func writeAllocation(path string, allocations [][]string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return fmt.Errorf("create output directory: %w", err)
 	}
+
 	// Write to a temporary file, then rename, avoiding partially written CSVs.
 	tmp, err := os.CreateTemp(filepath.Dir(path), ".rr-allocation-*")
 	if err != nil {

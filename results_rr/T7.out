@@ -1,0 +1,2 @@
+host: cloudopt-vm1.europe-west1-b.c.cloud-optimization-511007.internal
+{"task":"cpu_task","size":500000,"runtime_s":0.030342722,"primes_found":41538}

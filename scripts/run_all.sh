@@ -1,57 +1,55 @@
 #!/usr/bin/env bash
-# TD3/TD4 — Lance toutes les tâches d'un fichier d'allocation, en parallèle.
-#
-# Usage : ./scripts/run_all.sh [ALLOCATION_CSV]   (défaut : data/allocation_manual.csv)
-# Zone : variable ZONE, sinon la zone par défaut de gcloud.
-#
-# Une ligne = un run_task.sh lancé en arrière-plan (&). Un seul wait, après
-# avoir tout lancé : plusieurs tâches d'une même VM tournent en même temps.
-set -u
+# Lit un fichier d'allocation et lance une tâche par ligne, en arrière-plan, puis attend la fin.
+# Usage : ./scripts/run_all.sh [ALLOCATION.csv] [EXPERIMENT_ID]
+#   sans EXPERIMENT_ID : résultats dans results/ (écrasés à chaque lancement)
+#   avec EXPERIMENT_ID : résultats dans results/<EXPERIMENT_ID>/ (jamais écrasés)
+source "$(dirname "$0")/config.sh"
+ALLOC="${1:-data/allocation_manual.csv}"
+EXP="${2:-}"
+if [ -n "$EXP" ]; then OUT="results/$EXP"; else OUT="results"; fi
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT" || exit 1
-
-INPUT="${1:-data/allocation_manual.csv}"
-ZONE="${ZONE:-$(gcloud config get-value compute/zone 2>/dev/null)}"
-
-if [ ! -f "$INPUT" ]; then
-    echo "error: allocation file '$INPUT' not found" >&2
-    exit 1
-fi
-if [ -z "$ZONE" ]; then
-    echo "error: no zone (set ZONE or run: gcloud config set compute/zone ...)" >&2
-    exit 1
+if [ ! -f "$ALLOC" ]; then
+  echo "Erreur : fichier $ALLOC introuvable." >&2
+  exit 1
 fi
 
-HEADER="$(head -n 1 "$INPUT" | tr -d '\r')"
-if [ "$HEADER" != "task_id,workload,size,vm" ]; then
-    echo "error: $INPUT: header must be 'task_id,workload,size,vm', got '$HEADER'" >&2
-    exit 1
+# Vérifie que chaque task_id est unique
+DUP=$(tail -n +2 "$ALLOC" | tr -d '\r' | cut -d, -f1 | sed '/^$/d' | sort | uniq -d)
+if [ -n "$DUP" ]; then
+  echo "Erreur : task_id en double : $DUP" >&2
+  exit 1
 fi
 
-mkdir -p results
-rm -f results/*.out results/*.err results/*.status
+# Une expérience nommée n'est jamais écrasée
+if [ -n "$EXP" ] && [ -d "$OUT" ]; then
+  echo "Erreur : $OUT existe déjà, choisis un autre EXPERIMENT_ID." >&2
+  exit 1
+fi
 
-echo "Allocation: $INPUT  |  zone: $ZONE"
-LAUNCHED=0
-while IFS=, read -r task_id workload size vm || [ -n "$task_id" ]; do
-    vm="${vm%$'\r'}"
-    [ -z "$task_id" ] && continue
-    ./scripts/run_task.sh "$task_id" "$workload" "$size" "$vm" "$ZONE" < /dev/null &
-    echo "launched $task_id -> $vm (pid $!)"
-    LAUNCHED=$((LAUNCHED + 1))
-done < <(tail -n +2 "$INPUT")
+mkdir -p "$OUT"
+rm -f "$OUT"/*.out "$OUT"/*.err "$OUT"/*.status
+cp "$ALLOC" "$OUT/allocation.csv"     # garde l'allocation exacte utilisée
 
-echo "$LAUNCHED tasks launched, waiting..."
+N=0
+while IFS=, read -r task_id workload size vm; do
+  [ -z "$task_id$workload$size$vm" ] && continue
+  if [ -z "$task_id" ] || [ -z "$workload" ] || [ -z "$size" ] || [ -z "$vm" ]; then
+    echo "Ligne incomplète ignorée : $task_id,$workload,$size,$vm" >&2
+    continue
+  fi
+  ./scripts/run_task.sh "$task_id" "$workload" "$size" "$vm" "$ZONE" "$OUT" < /dev/null &
+  N=$((N + 1))
+done < <(tail -n +2 "$ALLOC" | tr -d '\r')
+
+echo "$N tâches lancées, attente de la fin..."
 wait
+echo "All tasks completed"
 
-FAILED=0
-for status_file in results/*.status; do
-    [ -e "$status_file" ] || continue
-    IFS=, read -r _ _ code < "$status_file"
-    [ "$code" = "0" ] || FAILED=$((FAILED + 1))
-done
-DONE=$(ls results/*.status 2>/dev/null | wc -l)
-
-echo "All tasks completed: $DONE/$LAUNCHED finished, $FAILED failed."
-[ "$FAILED" -eq 0 ] && [ "$DONE" -eq "$LAUNCHED" ]
+# Bilan à partir des fichiers .status
+FAILS=$(cat "$OUT"/*.status | awk -F, '$5 != 0' | wc -l)
+echo "Bilan : $N tâches, $FAILS en échec. Résultats dans $OUT/"
+if [ "$FAILS" -ne 0 ]; then
+  cat "$OUT"/*.status | awk -F, '$5 != 0 {print "  ECHEC : " $1 " sur " $4 " (code " $5 ")"}' >&2
+  exit 1
+fi
+exit 0

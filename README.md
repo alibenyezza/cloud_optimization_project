@@ -1,95 +1,144 @@
-# Cloud Optimization — Distributed task scheduling on GCP
+# Cloud Optimization – Ordonnancement de tâches sur GCP avec NSGA-II
 
-ESILV A5 semester project. **Given a set of tasks and a set of VMs, where should each task run?**
+Projet semestriel ESILV A5 CCC. Question centrale : **étant donné des tâches et des VMs,
+où exécuter chaque tâche ?** On compare une allocation de référence (Round-Robin) à une
+allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : makespan et coût).
 
-```
-data/tasks.csv + data/machines.csv (+ benchmark data)
-        │
-        ▼
-   scheduler (Go)  ──►  data/allocation_*.csv  ──►  scripts/run_all.sh  ──►  VM1 / VM2 / VM3
-                                                                                 │
-                                                                                 ▼
-                                                                   results/T*.out / .err / .status
-```
+## Architecture
 
-| Component | Role | Files |
-|---|---|---|
-| Workloads | compiled Go programs with different resource profiles | `workloads/` |
-| Infrastructure | 3 Compute Engine VMs | see below |
-| Scheduler | decides where each task runs, writes an allocation CSV | `scheduler/` |
-| Orchestrator | launches every task remotely and in parallel, collects outputs | `scripts/run_task.sh`, `scripts/run_all.sh` |
+    tasks.csv + machines.csv + profiles.csv
+                    |
+                    v
+       SCHEDULER (Round-Robin ou NSGA-II)
+                    |
+                    v
+             allocation_*.csv
+                    |
+                    v
+    ORCHESTRATEUR (run_experiment.sh -> run_all.sh -> run_task.sh)
+          |              |              |
+          v              v              v
+    cloudopt-vm1   cloudopt-vm2   cloudopt-vm3
+          \              |              /
+           v             v             v
+    results/<id>/results.csv + gantt.svg  ->  data/experiments.csv
+
+- **Workloads** (`workloads/`) : programmes Go compilés (cpu_task, memory_task, matrix_task, sort_task).
+- **Scheduler** (`scheduler/`) : décide sur quelle VM tourne chaque tâche. Ne lance rien.
+- **Orchestrateur** (`scripts/`) : exécute une allocation en parallèle par SSH et collecte les résultats.
+  Il ne prend aucune décision : n'importe quelle allocation au bon format peut être exécutée.
+
+Les formats de tous les fichiers sont définis dans **[docs/INTERFACES.md](docs/INTERFACES.md)**.
 
 ## Infrastructure
 
-| Item | Value |
-|---|---|
-| Project ID | `cloud-optimization-511007` |
-| Zone | `europe-west1-b` |
-| VMs | `cloudopt-vm1`, `cloudopt-vm2`, `cloudopt-vm3` |
-| Machine type | `e2-medium` (2 shared-core vCPUs, 4 GB RAM) |
-| Image / disk | `ubuntu-2404-lts-amd64`, 20 GB `pd-balanced` |
-| Controller | Linux (Ubuntu 24.04 under WSL2), Go 1.22, Google Cloud CLI |
+Projet GCP `cloud-optimization-511007`, zone `europe-west9-b` (Paris), image Debian 12.
+Zone et projet sont définis une seule fois dans `scripts/config.sh`.
 
-## Repository layout
+| VM | Type | vCPU | RAM (Linux) | CPU |
+|---|---|---|---|---|
+| cloudopt-vm1 | e2-highcpu-2 | 2 | 1976 Mo | Xeon 2.20 GHz |
+| cloudopt-vm2 | e2-standard-2 | 2 | 7950 Mo | Xeon 2.20 GHz |
+| cloudopt-vm3 | n2-standard-2 | 2 | 7950 Mo | Xeon 2.80 GHz |
 
-```
-workloads/          reference workloads: cpu_task, memory_task, matrix_task, sort_task
-scheduler/          round_robin.go — Round-Robin baseline scheduler
-scripts/
-  benchmark.sh            runs one workload N times, appends raw rows to a CSV
-  benchmark_campaign.sh   full campaign: 4 workloads × 3 sizes × N runs
-  summarize.sh            mean / std / min / max / RSS per configuration
-  run_task.sh             runs one task on one VM through gcloud compute ssh
-  run_all.sh              runs every task of an allocation in parallel (& + single wait)
-  test_scheduler.sh       scheduler test cases, no VM needed
-data/
-  machine_local.txt, machine_cloud_vm1.txt         machine descriptions
-  benchmark_local.csv, benchmark_cloud_vm1.csv     raw benchmark runs
-  tasks.csv, machines.csv                          scheduler inputs
-  allocation_manual.csv, allocation_manual_v2.csv  hand-written allocations
-  allocation_rr.csv                                Round-Robin allocation (generated)
-docs/               TD1–TD4 notes, results and answers
-```
+Les VMs sont volontairement hétérogènes : vm1 est peu chère mais limitée en mémoire,
+vm3 a un CPU plus rapide mais coûte plus cher. Fiches détaillées : `data/machine_<vm>.txt`.
+Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevés le 23/10/2026 sur gcloud-compute.com (à recouper avec la console GCP).
 
-## Quick start
+## Arborescence
 
-Requirements: Linux, Go, GNU time (`sudo apt install golang-go time`), and the Google Cloud CLI
-authenticated on the project.
+    workloads/      sources Go des 4 workloads
+    scheduler/      round_robin.go (baseline) ; NSGA-II à venir
+    tools/gantt/    génération de la timeline SVG d'une expérience
+    scripts/        config.sh, create_vms.sh, deploy_all.sh, run_task.sh, run_all.sh,
+                    collect_results.sh, run_experiment.sh, delete_vms.sh, benchmark.sh
+    data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
+    results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
+    docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3
+    bin/            exécutables compilés (non versionnés)
 
-```bash
-# 1. Build
-mkdir -p bin
-for w in cpu_task memory_task matrix_task sort_task; do go build -o bin/$w workloads/$w.go; done
-go build -o bin/round_robin_scheduler scheduler/round_robin.go
+## Prérequis
 
-# 2. Benchmark locally
-./scripts/benchmark_campaign.sh data/benchmark_local.csv 3
-./scripts/summarize.sh data/benchmark_local.csv
+Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
+(`gcloud auth login --no-launch-browser` sous WSL, puis `gcloud config set project cloud-optimization-511007`).
 
-# 3. Start the VMs and deploy the binaries
-gcloud config set compute/zone europe-west1-b
-gcloud compute instances start cloudopt-vm1 cloudopt-vm2 cloudopt-vm3
-for vm in cloudopt-vm1 cloudopt-vm2 cloudopt-vm3; do
-  gcloud compute ssh $vm --command="mkdir -p ~/cloud-optimization"
-  gcloud compute scp --recurse bin $vm:~/cloud-optimization/
-done
+## Reproduire une expérience
 
-# 4. Schedule and run
-./scripts/test_scheduler.sh
-./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
-./scripts/run_all.sh data/allocation_rr.csv
+    # 1. Compiler
+    for w in cpu_task memory_task matrix_task sort_task; do go build -o bin/$w workloads/$w.go; done
+    go build -o bin/round_robin_scheduler scheduler/round_robin.go
+    go build -o bin/gantt tools/gantt/main.go
 
-# 5. Stop the VMs when finished
-gcloud compute instances stop cloudopt-vm1 cloudopt-vm2 cloudopt-vm3
-```
+    # 2. Créer les VMs décrites dans data/machines.csv, puis déployer les binaires
+    ./scripts/create_vms.sh
+    sleep 60                      # laisser démarrer SSH (sinon code 255)
+    ./scripts/deploy_all.sh
 
-## Progress
+    # 3. Calculer une allocation (ici la baseline Round-Robin)
+    ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
 
-| TD | Topic | Status | Notes |
-|---|---|---|---|
-| 1 | Local workloads and benchmarking | ✅ | [docs/TD1.md](docs/TD1.md) |
-| 2 | First Compute Engine deployment | ✅ | [docs/TD2.md](docs/TD2.md) |
-| 3 | Distributed orchestration | ✅ | [docs/TD3.md](docs/TD3.md) |
-| 4 | Round-Robin scheduler (baseline) | ✅ | [docs/TD4.md](docs/TD4.md) |
-| 5 | Optimized scheduler, performance/cost trade-offs | ⏳ | |
-| 6 | Final evaluation | ⏳ | |
+    # 4. Exécuter, collecter et tracer la timeline (ici 3 répétitions)
+    ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
+
+    # 5. Supprimer les VMs en fin de session (elles coûtent même inactives)
+    ./scripts/delete_vms.sh
+
+Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
+- `allocation.csv` : l'allocation exacte exécutée ;
+- `<TASK>.out`, `.err`, `.status` : sortie, erreurs, code de retour et horaires de chaque tâche ;
+- `results.csv` : une ligne par tâche, temps relatifs au début de l'expérience ;
+- `gantt.svg` : timeline (une bande par VM, tâches simultanées empilées, échecs en rouge).
+
+`data/experiments.csv` reçoit une ligne par expérience : makespan réel, coût réel,
+valeurs prédites, nombre de tâches et d'échecs. C'est la base de la comparaison Round-Robin / NSGA-II.
+
+Scripts utiles séparément :
+- `./scripts/run_all.sh ALLOCATION.csv [EXPERIMENT_ID]` : exécution seule ;
+- `./scripts/collect_results.sh EXPERIMENT_ID STRATEGY` : collecte seule ;
+- `./bin/gantt results/<id>/results.csv sortie.svg` : timeline seule.
+
+## Mesure : points de vigilance
+
+- **Surcoût SSH d'environ 3 s par tâche** (mesuré) : les horaires sont pris sur le PC contrôleur,
+  connexion SSH comprise. Le scénario utilise donc des tâches de 30 s à 2 min, pour que ce surcoût
+  reste faible devant le calcul. Le temps de calcul pur reste disponible (`runtime_s`).
+- **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; l'OS les répartit
+  sur les vCPU. Le modèle de prédiction en tient compte (voir INTERFACES.md).
+- **Variabilité** : un même scénario varie d'environ 1 à 2 % d'une exécution à l'autre ;
+  chaque stratégie est donc répétée plusieurs fois.
+- **Validation** : chaque `.out` commence par `host: <nom de la VM>`, ce qui prouve où la tâche a tourné.
+
+## Historique
+
+- TD1 : benchmarks locaux (`docs/write_up_TD1.txt`).
+- TD2 : première VM GCP, comparaison local / cloud (`docs/write_up_TD2.txt`).
+- TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
+- TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
+
+## Rapport (Word)
+
+Le rapport est dans `docs/rapport_cloud_optimization.docx`. Les parties 3, 4, 5 et le début
+de la 10 sont faites (Maxime). Les parties marquées "A compléter" sont à écrire par chacun selon
+sa partie du projet.
+
+Règles d'écriture, pour que tout le rapport ait le même style :
+
+- En français.
+- Uniquement des caractères tapables sur un clavier AZERTY : accents et caractères spéciaux
+  du clavier oui, mais pas de tiret long, de flèche, de guillemets « », de œ ni de majuscule
+  accentuée. On écrit "-" , "->", "coeur", "A compléter".
+- Style minimaliste : court, clair, concis. Des phrases simples, on écrit "on".
+  Le texte doit sonner comme nous, pas comme une IA.
+- Chaque choix technique est justifié avec son avantage ET son inconvénient.
+- Chaque chiffre vient d'une vraie mesure (experiments.csv, results.csv, profiles.csv),
+  jamais d'une estimation.
+- Les limites et les résultats inattendus sont expliqués, pas cachés.
+- On garde le plan en 11 parties : c'est celui que demande le sujet pour la soutenance.
+- Objectif : chaque partie doit répondre à un critère de la grille de notation (fin du sujet).
+
+Un fichier Word ne se fusionne pas avec git. Pour ne pas perdre de travail :
+
+1. Prévenir les autres avant de l'ouvrir ("je prends le Word").
+2. `git pull` avant de commencer.
+3. Faire ses modifications.
+4. `git add`, `git commit`, `git push` tout de suite, puis prévenir que c'est libre.

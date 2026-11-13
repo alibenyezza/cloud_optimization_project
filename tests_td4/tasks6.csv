@@ -1,0 +1,7 @@
+task_id,workload,size
+T1,cpu_task,500000
+T2,cpu_task,1000000
+T3,memory_task,256
+T4,matrix_task,400
+T5,memory_task,512
+T6,matrix_task,600
