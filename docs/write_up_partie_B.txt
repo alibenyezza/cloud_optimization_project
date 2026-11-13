@@ -72,8 +72,8 @@ plus vite : chaque tâche est ralentie d'environ 2 fois quand elle partage la VM
 Si on prend simplement fin(VM) = somme des temps de ses tâches, l'erreur tombe à :
     makespan +2,8 % (83,0 s prévu contre 80,7 s), coût +7 %.
 C'est un peu pessimiste, ce qui est plus sûr pour planifier.
-Proposition : remplacer "/ vcpu" par la somme simple dans le modèle commun
-(à valider par l'équipe, car NSGA-II utilise ce modèle).
+Décision d'équipe : le modèle commun utilise maintenant la somme simple
+(INTERFACES.md et tools/predict). NSGA-II optimise avec ce modèle.
 
 6. Résultat inattendu
 

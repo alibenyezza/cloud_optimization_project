@@ -55,8 +55,9 @@ Format inchangé depuis le TD3 : run_all.sh lit n'importe quel fichier de ce for
 - experiment_id : AAAAMMJJ-HHMM_<strategie>_r<k>, ex. 20261023-1530_rr_r1
 
 ## Modèle commun de prédiction (identique pour tous)
-run_all.sh lance en même temps toutes les tâches d'une VM ; l'OS partage les vCPU :
-    fin(VM)  = max( somme des temps des tâches de la VM / vcpu , temps de la plus longue )
+run_all.sh lance en même temps toutes les tâches d'une VM. Nos VMs ont 2 vCPU mais 1 seul coeur
+physique (2 threads, voir lscpu) : deux tâches simultanées vont à peu près aussi vite qu'en série.
+    fin(VM)  = somme des temps des tâches de la VM   (validé : +3 % sur le makespan Round-Robin)
     makespan = max des fin(VM)
     coût     = somme sur les VMs de price_per_hour_usd / 3600 * fin(VM)
     mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)

@@ -15,7 +15,6 @@ import (
 
 type machine struct {
 	name, mtype string
-	vcpu        float64
 	ramMB       float64
 	price       float64
 }
@@ -67,7 +66,7 @@ func main() {
 	machines := map[string]machine{}
 	var order []string
 	for _, r := range readCSV(os.Args[2])[1:] {
-		machines[r[0]] = machine{name: r[0], mtype: r[1], vcpu: num(r[2], "vcpu"),
+		machines[r[0]] = machine{name: r[0], mtype: r[1],
 			ramMB: num(r[3], "ram_mb"), price: num(r[4], "price_per_hour_usd")}
 		order = append(order, r[0])
 	}
@@ -85,9 +84,8 @@ func main() {
 		expected[r[0]] = true
 	}
 
-	// Allocation : task_id,workload,size,vm -> somme, plus longue tâche et mémoire par VM
+	// Allocation : task_id,workload,size,vm -> somme des temps et mémoire par VM
 	sum := map[string]float64{}
-	longest := map[string]float64{}
 	mem := map[string]float64{}
 	count := map[string]int{}
 	seen := map[string]bool{}
@@ -109,9 +107,6 @@ func main() {
 			fail("pas de mesure pour %s %s sur %s dans %s", w, size, m.mtype, os.Args[3])
 		}
 		sum[vm] += p.runtime
-		if p.runtime > longest[vm] {
-			longest[vm] = p.runtime
-		}
 		mem[vm] += p.rssMB
 		count[vm]++
 	}
@@ -119,15 +114,12 @@ func main() {
 		fail("l'allocation contient %d tâches sur %d", len(seen), len(expected))
 	}
 
-	// Modèle commun : fin(VM) = max(somme / vcpu, plus longue tâche)
+	// Modèle commun : fin(VM) = somme des temps de ses tâches (1 coeur physique par VM)
 	fmt.Println("vm,machine_type,n_tasks,end_s,mem_mb,mem_limit_mb")
 	makespan, cost, violation := 0.0, 0.0, 0.0
 	for _, vm := range order {
 		m := machines[vm]
-		end := sum[vm] / m.vcpu
-		if longest[vm] > end {
-			end = longest[vm]
-		}
+		end := sum[vm]
 		limit := 0.9 * m.ramMB
 		fmt.Printf("%s,%s,%d,%.2f,%.0f,%.0f\n", vm, m.mtype, count[vm], end, mem[vm], limit)
 		if end > makespan {
