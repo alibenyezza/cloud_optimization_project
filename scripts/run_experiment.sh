@@ -18,7 +18,7 @@ fi
 if ! [[ "$REP" =~ ^[0-9]+$ ]] || [ "$REP" -lt 1 ]; then
   echo "Erreur : REPETITIONS doit être un entier >= 1." >&2; exit 1
 fi
-if [ ! -x bin/gantt ]; then go build -o bin/gantt tools/gantt/main.go || exit 1; fi
+go build -o bin/gantt tools/gantt/main.go || exit 1   # toujours à jour avec tools/gantt
 
 STAMP=$(date +%Y%m%d-%H%M)
 IDS=""
@@ -33,7 +33,11 @@ for r in $(seq 1 "$REP"); do
     echo "Erreur : l'expérience $EXP n'a pas pu démarrer (code $CODE), arrêt." >&2; exit 1
   fi
   ./scripts/collect_results.sh "$EXP" "$STRATEGY" "$PRED_MK" "$PRED_COST" || exit 1
-  ./bin/gantt "results/$EXP/results.csv" "results/$EXP/gantt.svg"
+  if [ -f "results/$EXP/tasks.csv" ]; then   # expérience avec dépendances : flèches + chemin critique
+    ./bin/gantt "results/$EXP/results.csv" "results/$EXP/gantt.svg" "results/$EXP/tasks.csv"
+  else
+    ./bin/gantt "results/$EXP/results.csv" "results/$EXP/gantt.svg"
+  fi
   IDS="$IDS $EXP"
   [ "$r" -lt "$REP" ] && sleep 5      # laisse les VMs revenir au repos entre deux répétitions
 done
