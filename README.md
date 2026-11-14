@@ -15,7 +15,7 @@ allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : m
              allocation_*.csv
                     |
                     v
-    ORCHESTRATEUR (run_experiment.sh -> run_all.sh -> run_task.sh)
+    ORCHESTRATEUR (run_experiment.sh -> run_all.sh | run_all_queue.sh | run_all_dag.sh)
           |              |              |
           v              v              v
     cloudopt-vm1   cloudopt-vm2   cloudopt-vm3
@@ -27,6 +27,8 @@ allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : m
 - **Scheduler** (`scheduler/`) : décide sur quelle VM tourne chaque tâche. Ne lance rien.
 - **Orchestrateur** (`scripts/`) : exécute une allocation en parallèle par SSH et collecte les résultats.
   Il ne prend aucune décision : n'importe quelle allocation au bon format peut être exécutée.
+  3 modes : tout en même temps (`run_all.sh`), file d'attente par VM (`run_all_queue.sh`),
+  file d'attente + dépendances entre tâches (`run_all_dag.sh`).
 
 Les formats de tous les fichiers sont définis dans **[docs/INTERFACES.md](docs/INTERFACES.md)**.
 
@@ -58,7 +60,7 @@ Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevé
                     benchmark.sh, benchmark_vms.sh, make_profiles.sh
     data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
     results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
-    docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3
+    docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3, rapport Word
     bin/            exécutables compilés (non versionnés)
 
 ## Prérequis
@@ -75,22 +77,24 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
     go build -o bin/predict tools/predict/main.go
     go build -o bin/nsga2 scheduler/nsga2.go
 
-    # 2. Créer les VMs décrites dans data/machines.csv, puis déployer les binaires
-    ./scripts/create_vms.sh
-    sleep 60                      # laisser démarrer SSH (sinon code 255)
-    ./scripts/deploy_all.sh
-
-    # 3. Mesurer chaque tâche de tasks.csv sur chaque type de VM (5 fois), puis faire profiles.csv
-    #    (environ 20 min ; inutile si profiles.csv est déjà à jour pour ce tasks.csv)
+    # 2. (Seulement si profiles.csv n'est pas à jour pour ce tasks.csv) Mesurer chaque tâche
+    #    sur chaque type de VM (5 fois, environ 20 min), puis faire profiles.csv
+    ./scripts/create_vms.sh && sleep 60 && ./scripts/deploy_all.sh
     ./scripts/benchmark_vms.sh 5
     ./scripts/make_profiles.sh
 
-    # 4. Calculer une allocation (ici la baseline Round-Robin) et sa prédiction
+    # 3. Calculer les allocations (Round-Robin et NSGA-II) et leurs prédictions
     ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
     ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_rr.csv
+    ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv 42     # -> data/allocation_nsga.csv
+    ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_nsga.csv
 
-    # 5. Exécuter, collecter et tracer la timeline (3 répétitions), avec makespan et coût prévus
-    ./scripts/run_experiment.sh data/allocation_rr.csv rr 3 MAKESPAN_PREVU COUT_PREVU
+    # 4. Créer seulement les VMs utilisées par l'allocation, attendre SSH, déployer (temps mesuré)
+    ./scripts/setup_vms.sh data/allocation_rr.csv
+
+    # 5. Exécuter, collecter et tracer la timeline (3 répétitions, mode file), avec makespan et coût prévus
+    QUEUE=1 ./scripts/run_experiment.sh data/allocation_rr.csv rr 3 MAKESPAN_PREVU COUT_PREVU
+    QUEUE=1 ./scripts/run_experiment.sh data/allocation_nsga.csv nsga 3 MAKESPAN_PREVU COUT_PREVU
 
     # 6. Supprimer les VMs en fin de session (elles coûtent même inactives)
     ./scripts/delete_vms.sh
@@ -128,8 +132,10 @@ Scripts utiles séparément :
 - **Surcoût SSH d'environ 3 s par tâche** (mesuré) : les horaires sont pris sur le PC contrôleur,
   connexion SSH comprise. Le scénario utilise donc des tâches de 30 s à 2 min, pour que ce surcoût
   reste faible devant le calcul. Le temps de calcul pur reste disponible (`runtime_s`).
-- **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; l'OS les répartit
-  sur les vCPU. Le modèle de prédiction en tient compte (voir INTERFACES.md).
+- **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; `run_all_queue.sh`
+  et `run_all_dag.sh` en lancent au plus vcpu à la fois. Une VM à 2 vCPU n'a qu'un seul coeur physique :
+  deux tâches de calcul sur la même VM se ralentissent (voir INTERFACES.md, section Exécution).
+- **Démarrage d'une VM** : environ 46 s (création + SSH prêt + déploiement), mesuré dans `data/vm_setup.csv`.
 - **Variabilité** : un même scénario varie d'environ 1 à 2 % d'une exécution à l'autre ;
   chaque stratégie est donc répétée plusieurs fois.
 - **Validation** : chaque `.out` commence par `host: <nom de la VM>`, ce qui prouve où la tâche a tourné.
@@ -148,7 +154,7 @@ Scripts utiles séparément :
 ## Rapport (Word)
 
 Le rapport est dans `docs/rapport_cloud_optimization.docx`. Les parties 3, 4, 5 et le début
-de la 10 sont faites (Maxime). Les parties marquées "A compléter" sont à écrire par chacun selon
+de la 10 sont faites et à jour du TD5 (Maxime). Les parties marquées "A compléter" sont à écrire par chacun selon
 sa partie du projet.
 
 Règles d'écriture, pour que tout le rapport ait le même style :

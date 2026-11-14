@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Exécute une allocation en respectant les DÉPENDANCES entre tâches (graphe de précédence).
+# Exécute une allocation en respectant les dépendances entre tâches (graphe de précédence).
 #
 # Dépendances : colonne optionnelle depends_on de tasks.csv, ids séparés par ";" (vide = aucune).
 #     task_id,workload,size,depends_on
@@ -95,7 +95,7 @@ while :; do
       now=$(date +%s.%N)
       echo "$id,${W[$id]},${S[$id]},${VM[$id]},99,$now,$now" > "$OUT/$id.status"
       echo "dépendance échouée" > "$OUT/$id.err"
-      echo "[$id] NON LANCÉE : une dépendance a échoué" >&2
+      echo "[$id] non lancée : une dépendance a échoué" >&2
       STATE[$id]=F
       continue
     fi

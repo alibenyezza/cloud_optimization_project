@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Expérience "nombre de VMs" : le MÊME lot de tâches exécuté avec 1, 2, 3... VMs identiques.
+# Expérience "nombre de VMs" : le même lot de tâches exécuté avec 1, 2, 3... VMs identiques.
 # But : montrer avec des mesures qu'ajouter des VMs n'accélère pas toujours
 # (la plus longue tâche reste une limite, chaque VM a un surcoût fixe, et le coût monte).
 #
