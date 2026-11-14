@@ -1,0 +1,4 @@
+date,vm,machine_type,create_s,ssh_ready_s,deploy_s,total_s
+20261114-2157,cloudopt-s1,e2-standard-2,11.0,27.9,7.0,45.8
+20261114-2159,cloudopt-s2,e2-standard-2,12.0,27.8,6.9,46.7
+20261114-2200,cloudopt-s3,e2-standard-2,11.6,26.6,7.7,45.9
