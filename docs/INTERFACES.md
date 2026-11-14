@@ -94,20 +94,27 @@ Quota du projet : 16 vCPU toutes régions confondues, donc 8 VMs à 2 vCPU au ma
 - experiment_id : AAAAMMJJ-HHMM_<strategie>_r<k>, ex. 20261023-1530_rr_r1
 
 ## Modèle commun de prédiction (identique pour tous)
-Vaut pour les modes "tout en même temps" et "file par VM" (mode utilisé pour la comparaison finale).
-Nos VMs ont 2 vCPU mais 1 seul coeur physique (2 threads, voir lscpu) : deux tâches simultanées vont
-à peu près aussi vite qu'en série. L'ordre des tâches dans la file ne change donc pas la fin de la VM.
-    fin(VM)  = somme des temps des tâches de la VM   (validé : +3 % sur le makespan Round-Robin)
-    makespan = max des fin(VM)
+Un seul code : model/model.go, utilisé par tools/predict et scheduler/nsga2.go (tests : go test ./model).
+Le modèle SIMULE les règles de la section Exécution (modes file et dépendances) :
+- une tâche part quand ses dépendances sont finies, au plus vcpu tâches par VM,
+  première tâche prête dans l'ordre de l'allocation quand une place se libère ;
+- vitesse : 1 seul coeur physique par VM (2 threads, voir lscpu). Avec k tâches qui calculent
+  en même temps, chacune avance à 1/k de sa vitesse seule (htGain = 1). Sans dépendances, une VM
+  finit donc à la somme des temps de ses tâches (validé : +3 % sur le makespan Round-Robin) ;
+- mode dépendances (au moins une dépendance dans tasks.csv) : chaque tâche attend en plus 3,5 s
+  (SSH ~3 s + détection de fin jusqu'à 1 s), sans prendre le CPU.
+Résultats :
+    makespan = fin de la dernière tâche
     coût     = somme sur les VMs UTILISEES de price_per_hour_usd / 3600 * (préparation + makespan)
                préparation = moyenne de total_s dans data/vm_setup.csv pour ce machine_type (~46 s)
                (une VM est payée dès sa création et jusqu'à la fin ; une VM sans tâche n'est pas créée)
-    mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)
+    mémoire  = pic des max_rss des tâches qui tournent EN MEME TEMPS sur une VM <= 90 % de ram_mb
 Le coût mesuré (collect_results.sh) utilise la même formule avec le makespan mesuré.
-Pas couvert : le mode dépendances (il faudrait simuler les règles de la section Exécution)
-et le surcoût SSH d'environ 3 s par VM en mode file.
+Les coûts des runs du 13/11 dans experiments.csv ont été recalculés le 14/11 avec cette formule.
+Pas couvert : le mode "tout en même temps" pour la mémoire (toutes les tâches ensemble),
+le surcoût SSH d'environ 3 s par VM en mode file, le gain de l'hyperthreading (htGain à mesurer).
 En Go : allocation[i] = indice de la VM de la tâche i (c'est aussi le chromosome NSGA-II).
-Implémenté dans tools/predict/main.go (B). Dernière ligne affichée :
+Dernière ligne affichée par predict :
     prediction,<makespan_s>,<cost_usd>,<mem_violation_mb>
 
 ## Branches git

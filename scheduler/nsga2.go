@@ -1,7 +1,8 @@
 // nsga2 : NSGA-II pour placer les tâches sur les VMs, avec 2 objectifs à minimiser :
 // le makespan et le coût. La mémoire de chaque VM est une contrainte.
-// Evaluation = modèle commun de docs/INTERFACES.md (même calcul que tools/predict),
-// avec le temps de préparation des VMs de data/vm_setup.csv.
+// Evaluation = modèle commun (package model, le même que tools/predict) : simulation des
+// règles de l'orchestrateur, dépendances comprises, et préparation des VMs (data/vm_setup.csv).
+// L'ordre des tâches reste celui de tasks.csv : l'algo choisit seulement la VM de chaque tâche.
 // Compilation : go build -o bin/nsga2 scheduler/nsga2.go
 // Usage       : ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv [SEED]
 // Sorties     : data/pareto/ (pareto.csv, sol_XXX.csv, pareto.svg, run.txt) et data/allocation_nsga.csv
@@ -17,12 +18,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"cloudopt/model"
 )
 
 // Paramètres de l'algo
 const (
 	popSize   = 100 // nombre de solutions dans la population
-	nGen      = 300 // nombre de générations
+	nGen      = 500 // nombre de générations (500 : vrai front retrouvé sur 20 graines sur 20)
 	crossProb = 0.9 // probabilité de croisement
 	closeProb = 0.1 // probabilité de la mutation "fermer une VM"
 	outDir    = "data/pareto"
@@ -30,20 +33,12 @@ const (
 	setupPath = "data/vm_setup.csv"
 )
 
-type task struct{ id, workload, size string }
-
-type vm struct {
-	name, mtype  string
-	ramMB, price float64
-	setup        float64 // temps de préparation (création + SSH + déploiement), payé aussi
-}
-
 // Données du problème, lues une fois au début
 var (
-	tasks []task
-	vms   []vm
-	rt    [][]float64 // rt[i][v]  : temps médian de la tâche i sur la VM v (s)
-	rss   [][]float64 // rss[i][v] : mémoire max de la tâche i sur la VM v (Mo)
+	prob  *model.Problem
+	tasks []model.Task
+	vms   []model.VM
+	order []int // ordre de tasks.csv
 )
 
 type solution struct {
@@ -61,100 +56,21 @@ func fail(msg string, a ...any) {
 	os.Exit(1)
 }
 
-func readCSV(path string) [][]string {
-	f, err := os.Open(path)
-	if err != nil {
+func load(tasksPath, machinesPath, profilesPath string) {
+	var err error
+	if prob, err = model.Load(tasksPath, machinesPath, profilesPath, setupPath); err != nil {
 		fail("%v", err)
 	}
-	defer f.Close()
-	recs, err := csv.NewReader(f).ReadAll()
-	if err != nil || len(recs) < 2 {
-		fail("%s vide ou illisible", path)
-	}
-	for _, r := range recs {
-		for i := range r {
-			r[i] = strings.TrimSpace(r[i])
-		}
-	}
-	return recs[1:]
-}
-
-func num(s, what string) float64 {
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		fail("%s invalide : %q", what, s)
-	}
-	return v
-}
-
-func load(tasksPath, machinesPath, profilesPath string) {
-	// Préparation moyenne par machine_type (data/vm_setup.csv) ; type jamais mesuré : moyenne de tout
-	setupSum, setupN := map[string]float64{}, map[string]float64{}
-	all, count := 0.0, 0.0
-	for _, r := range readCSV(setupPath) {
-		t := num(r[6], "total_s")
-		setupSum[r[2]] += t
-		setupN[r[2]]++
-		all += t
-		count++
-	}
-	for _, r := range readCSV(machinesPath) {
-		m := vm{name: r[0], mtype: r[1], ramMB: num(r[3], "ram_mb"), price: num(r[4], "price_per_hour_usd"), setup: all / count}
-		if setupN[m.mtype] > 0 {
-			m.setup = setupSum[m.mtype] / setupN[m.mtype]
-		}
-		vms = append(vms, m)
-	}
-	type prof struct{ runtime, rssMB float64 }
-	profiles := map[string]prof{}
-	for _, r := range readCSV(profilesPath) {
-		profiles[r[0]+","+r[1]+","+r[2]] = prof{num(r[5], "median_runtime_s"), num(r[7], "max_rss_kb") / 1024}
-	}
-	for _, r := range readCSV(tasksPath) {
-		t := task{r[0], r[1], r[2]}
-		tasks = append(tasks, t)
-		rowT := make([]float64, len(vms))
-		rowM := make([]float64, len(vms))
-		for v, m := range vms {
-			p, ok := profiles[t.workload+","+t.size+","+m.mtype]
-			if !ok {
-				fail("pas de mesure pour %s %s sur %s", t.workload, t.size, m.mtype)
-			}
-			rowT[v], rowM[v] = p.runtime, p.rssMB
-		}
-		rt = append(rt, rowT)
-		rss = append(rss, rowM)
-	}
-	if len(tasks) < 2 || len(vms) == 0 {
-		fail("il faut au moins 2 tâches et 1 VM")
+	tasks, vms, order = prob.Tasks, prob.VMs, model.Identity(len(prob.Tasks))
+	if len(tasks) < 2 {
+		fail("il faut au moins 2 tâches")
 	}
 }
 
-// evaluate applique le modèle commun à une allocation
+// evaluate applique le modèle commun (simulation) à une allocation
 func evaluate(alloc []int) solution {
-	end := make([]float64, len(vms))
-	mem := make([]float64, len(vms))
-	used := make([]bool, len(vms))
-	for i, v := range alloc {
-		end[v] += rt[i][v]
-		mem[v] += rss[i][v]
-		used[v] = true
-	}
-	s := solution{alloc: alloc}
-	for v := range vms {
-		s.makespan = math.Max(s.makespan, end[v])
-		if limit := 0.9 * vms[v].ramMB; mem[v] > limit {
-			s.violation += mem[v] - limit
-		}
-	}
-	// Une VM utilisée est payée de sa création jusqu'à la fin, une VM vide n'est pas créée
-	for v := range vms {
-		if used[v] {
-			s.cost += vms[v].price / 3600 * (vms[v].setup + s.makespan)
-			s.nVMs++
-		}
-	}
-	return s
+	r := prob.Simulate(alloc, order)
+	return solution{alloc: alloc, makespan: r.Makespan, cost: r.Cost, violation: r.Violation, nVMs: r.NVMs}
 }
 
 // dominates : a est meilleure que b.
@@ -427,7 +343,7 @@ func writeCSV(path string, rows [][]string) {
 func allocationRows(s solution) [][]string {
 	rows := [][]string{{"task_id", "workload", "size", "vm"}}
 	for i, t := range tasks {
-		rows = append(rows, []string{t.id, t.workload, t.size, vms[s.alloc[i]].name})
+		rows = append(rows, []string{t.ID, t.Workload, t.Size, vms[s.alloc[i]].Name})
 	}
 	return rows
 }
@@ -501,7 +417,11 @@ func main() {
 	}
 	seed := int64(42)
 	if len(os.Args) == 5 {
-		seed = int64(num(os.Args[4], "seed"))
+		s, err := strconv.ParseInt(os.Args[4], 10, 64)
+		if err != nil {
+			fail("seed invalide : %q", os.Args[4])
+		}
+		seed = s
 	}
 	load(os.Args[1], os.Args[2], os.Args[3])
 
@@ -537,6 +457,11 @@ func main() {
 
 	exact := exactFront()
 	var report strings.Builder
+	mode := "file par VM (QUEUE=1)"
+	if prob.HasDeps {
+		mode = "dépendances (DAG=" + os.Args[1] + ")"
+	}
+	fmt.Fprintf(&report, "scénario %s : %d tâches, %d VMs, mode %s\n", os.Args[1], len(tasks), len(vms), mode)
 	fmt.Fprintf(&report, "seed=%d population=%d generations=%d croisement=%.1f mutation=1/%d fermer_vm=%.1f\n",
 		seed, popSize, nGen, crossProb, len(tasks), closeProb)
 	fmt.Fprintf(&report, "front NSGA-II : %d solutions\n", len(front))
