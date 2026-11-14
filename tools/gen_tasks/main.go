@@ -1,13 +1,13 @@
 // gen_tasks : génère un scénario (tasks.csv) de N tâches tirées au hasard dans un menu de
 // couples (workload, taille). Même graine = même scénario : l'expérience est reproductible.
 //
-// Le menu (data/task_menu.csv) ne doit contenir que des couples MESURÉS dans profiles.csv,
+// Le menu (data/task_menu.csv) ne doit contenir que des couples mesurés dans profiles.csv,
 // sinon le modèle ne peut pas prédire leur durée.
 //
 // Compilation : go build -o bin/gen_tasks tools/gen_tasks/main.go
 // Usage       : ./bin/gen_tasks -n 40 -seed 1 -menu data/task_menu.csv -out data/tasks_40.csv
 // Dépendances : -deps 0.5 -maxdeps 2 : chaque tâche (sauf la 1re) a une chance sur 2 de dépendre
-//               de 1 à 2 tâches PRÉCÉDENTES. Comme on ne dépend que du passé, il n'y a jamais de cycle.
+//               de 1 à 2 tâches précédentes. Comme on ne dépend que du passé, il n'y a jamais de cycle.
 //               Ajoute une colonne depends_on (ids séparés par ";") lue par run_all_dag.sh.
 package main
 
