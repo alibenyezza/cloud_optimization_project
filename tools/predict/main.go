@@ -125,9 +125,14 @@ func main() {
 		if end > makespan {
 			makespan = end
 		}
-		cost += m.price / 3600 * end
 		if mem[vm] > limit {
 			violation += mem[vm] - limit
+		}
+	}
+	// Coût : une VM utilisée reste allumée jusqu'à la fin de l'expérience, une VM sans tâche n'est pas louée
+	for _, vm := range order {
+		if count[vm] > 0 {
+			cost += machines[vm].price / 3600 * makespan
 		}
 	}
 	fmt.Printf("prediction,%.2f,%.6f,%.0f\n", makespan, cost, violation)

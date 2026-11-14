@@ -71,6 +71,7 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
     go build -o bin/round_robin_scheduler scheduler/round_robin.go
     go build -o bin/gantt tools/gantt/main.go
     go build -o bin/predict tools/predict/main.go
+    go build -o bin/nsga2 scheduler/nsga2.go
 
     # 2. Créer les VMs décrites dans data/machines.csv, puis déployer les binaires
     ./scripts/create_vms.sh

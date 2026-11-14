@@ -40,7 +40,7 @@ SUMMARY=$(awk -F, -v expid="$EXP" -v out="$DIR/results.csv" '
   }
   END {
     cost = 0; na = 0
-    for (v in fin) { if (price[v] ~ /^[0-9.]+$/) cost += price[v] / 3600 * fin[v]; else na = 1 }
+    for (v in fin) { if (price[v] ~ /^[0-9.]+$/) cost += price[v] / 3600 * mk; else na = 1 }
     printf "%.3f,%s,%d,%d\n", mk, (na ? "NA" : sprintf("%.6f", cost)), n, f + 0
   }' "$TMP" "$TMP")
 rm -f "$TMP"

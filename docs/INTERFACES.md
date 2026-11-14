@@ -7,7 +7,7 @@ Tout changement de format = une pull request qui modifie AUSSI ce fichier, relue
 |---|---|---|---|
 | A : infra et orchestrateur | Maxime | machines.csv, .status, results.csv, experiments.csv | allocations |
 | B : benchmarks et modèle | Ali | profiles.csv, fonction d'évaluation, validation prédit/réel | machines.csv |
-| C : NSGA-II | ? | pareto.csv, sol_*.csv, allocation_nsga.csv | tasks, machines, profiles |
+| C : NSGA-II | Théotime | pareto.csv, sol_*.csv, allocation_nsga.csv | tasks, machines, profiles |
 
 ## Conventions
 - Séparateur virgule, POINT décimal, une ligne d'en-tête, fins de ligne LF.
@@ -39,10 +39,14 @@ puis profiles.csv avec scripts/make_profiles.sh.
 Format inchangé depuis le TD3 : run_all.sh lit n'importe quel fichier de ce format.
 
 ## Sortie NSGA-II (data/pareto/) – C
-- pareto.csv : solution_id,makespan_pred_s,cost_pred_usd,mem_violation_mb
+- pareto.csv : solution_id,makespan_pred_s,cost_pred_usd,mem_violation_mb,n_vms
 - sol_001.csv, sol_002.csv... : une allocation par solution du front
-- data/allocation_nsga.csv : la solution choisie pour l'exécution
+- pareto.svg : le front (bleu), le vrai front par recherche exhaustive (cercles), Round-Robin (rouge)
+- run.txt : graine, paramètres, solution choisie, comparaison avec le vrai front
+- data/allocation_nsga.csv : la solution choisie pour l'exécution (la plus proche du point idéal,
+  makespan et coût ramenés entre 0 et 1 sur le front)
 - Toujours fixer et noter la graine aléatoire (seed) pour la reproductibilité.
+- Programme : scheduler/nsga2.go. Le nombre de VMs n'est pas fixé : l'algo peut laisser une VM vide.
 
 ## Résultats d'exécution – A
 - results/<experiment_id>/<TASK_ID>.status :
@@ -59,7 +63,8 @@ run_all.sh lance en même temps toutes les tâches d'une VM. Nos VMs ont 2 vCPU 
 physique (2 threads, voir lscpu) : deux tâches simultanées vont à peu près aussi vite qu'en série.
     fin(VM)  = somme des temps des tâches de la VM   (validé : +3 % sur le makespan Round-Robin)
     makespan = max des fin(VM)
-    coût     = somme sur les VMs de price_per_hour_usd / 3600 * fin(VM)
+    coût     = somme sur les VMs UTILISÉES de price_per_hour_usd / 3600 * makespan
+               (une VM reste allumée jusqu'à la fin de l'expérience ; une VM sans tâche n'est pas louée)
     mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)
 En Go : allocation[i] = indice de la VM de la tâche i (c'est aussi le chromosome NSGA-II).
 Implémenté dans tools/predict/main.go (B). Dernière ligne affichée :
