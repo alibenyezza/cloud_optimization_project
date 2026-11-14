@@ -1,0 +1,95 @@
+Partie B - Benchmarks et modèle de prédiction (Ali)
+Mesures du 13/11/2026, zone europe-west9-a, Debian 12.
+
+1. Scénario final (data/tasks.csv)
+
+12 tâches, 4 workloads, 2 tailles par workload :
+
+    cpu_task     20 000 000 (x2), 40 000 000
+    matrix_task  2000 (x2), 2500
+    sort_task    50 000 000 (x2), 100 000 000
+    memory_task  1024 (x2), 1536
+
+Pourquoi ces tailles :
+- cpu, matrix et sort durent de 7 s à 68 s seuls, donc le surcoût SSH (environ 3 s) reste petit.
+- memory_task reste court (1 à 2 s) : on ne peut pas l'allonger sans changer le workload
+  (--passes n'est pas passé par l'orchestrateur). Il sert surtout pour la RAM :
+  1536 Mo prend presque toute la mémoire de vm1 (limite 90 % = 1778 Mo).
+- On a gardé un mélange CPU / mémoire / mixte pour que le placement compte.
+
+2. Méthode de mesure
+
+- scripts/benchmark_vms.sh lance benchmark.sh sur chaque VM : chaque couple (workload, size)
+  5 fois, une tâche à la fois, les 3 VMs en parallèle. Durée totale : 13 min.
+- Temps = runtime_s écrit par le workload (calcul pur, sans SSH).
+  RAM = Maximum resident set size de /usr/bin/time -v.
+- scripts/make_profiles.sh calcule moyenne, médiane, écart-type et RSS max -> data/profiles.csv.
+
+3. Résultats (médiane sur 5 essais, en secondes)
+
+    tâche                  e2-highcpu-2  e2-standard-2  n2-standard-2
+    cpu_task 20 000 000        25,4          24,9            7,2
+    cpu_task 40 000 000        67,9          67,2           19,2
+    matrix_task 2000           12,7          12,5            9,9
+    matrix_task 2500           24,7          24,5           19,3
+    sort_task 50 000 000        7,2           7,1            5,7
+    sort_task 100 000 000      14,9          14,6           11,9
+    memory_task 1024            1,1           1,1            1,1
+    memory_task 1536            1,7           1,6            1,6
+
+Ce qu'on retient :
+- vm1 et vm2 ont le même CPU : mêmes temps à 2 % près. La seule différence est la RAM et le prix.
+- vm3 (n2) est 3,5 fois plus rapide sur cpu_task, mais seulement 1,3 fois sur matrix et sort,
+  et pas plus rapide sur memory_task. Le gain dépend du type de tâche : c'est ce qui rend
+  le placement intéressant.
+- Mesures stables : écart-type sous 1 % pour cpu, matrix et sort. memory_task varie plus
+  (jusqu'à 40 % sur n2), mais il dure 1 s, donc ça pèse peu.
+- RAM identique sur les 3 machines : elle dépend du programme, pas de la VM.
+
+4. Fonction d'évaluation (tools/predict/main.go)
+
+Elle applique le modèle commun de INTERFACES.md à une allocation et affiche, par VM,
+la fin prévue et la mémoire, puis : prediction,<makespan_s>,<cost_usd>,<mem_violation_mb>.
+Elle refuse une allocation invalide (tâche absente ou en double, VM inconnue, mesure manquante).
+
+5. Validation prédit / réel avec Round-Robin
+
+On a lancé allocation_rr.csv 3 fois avec run_experiment.sh, prédiction passée en argument.
+
+    VM     fin prévue (somme / 2 vCPU)   fin mesurée (moyenne)   fin prévue (somme)
+    vm1             31,9 s                     54,2 s                   63,8 s
+    vm2             67,2 s                     80,7 s                   83,0 s
+    vm3             15,0 s                     28,5 s                   30,0 s
+
+    makespan prévu 67,2 s, mesuré 79,9 / 80,1 / 82,2 s (moyenne 80,7 s) -> erreur -17 %
+    coût prévu 0,00243 USD, mesuré 0,00350 USD en moyenne -> erreur -31 %
+
+Le modèle sous-estime. Raison : nos VMs ont 2 vCPU, mais lscpu montre 1 coeur physique
+avec 2 threads (hyperthreading). Deux tâches CPU en même temps ne vont donc pas 2 fois
+plus vite : chaque tâche est ralentie d'environ 2 fois quand elle partage la VM
+(cpu_task 20 000 000 sur vm1 : 25,4 s seule, 48,0 s avec les autres).
+
+Si on prend simplement fin(VM) = somme des temps de ses tâches, l'erreur tombe à :
+    makespan +2,8 % (83,0 s prévu contre 80,7 s), coût +7 %.
+C'est un peu pessimiste, ce qui est plus sûr pour planifier.
+Décision d'équipe : le modèle commun utilise maintenant la somme simple
+(INTERFACES.md et tools/predict). NSGA-II optimise avec ce modèle.
+
+6. Résultat inattendu
+
+La 3e répétition du 13/11 (20261113-1636_rr_r3) a donné 392 s au lieu de 80 s.
+Les runtime_s des tâches sont normaux : le calcul a pris le temps habituel, mais plusieurs
+connexions SSH ont rendu la main plusieurs minutes après la fin de la tâche
+(erreur "channel" dans T1.err). On garde la ligne dans experiments.csv pour la transparence,
+mais on l'exclut des moyennes et on a refait une répétition (20261113-1646_rr_r1).
+Conséquence pour la suite : toujours regarder runtime_s à côté du temps mesuré,
+et refaire une répétition si les deux ne collent pas.
+
+7. Limites
+
+- 5 mesures par couple, sur une seule création de VM : une VM e2 recréée peut tomber
+  sur un autre processeur.
+- Le modèle ignore le surcoût SSH (environ 2 à 3 s par tâche) et la concurrence pour la
+  mémoire entre tâches.
+- La contrainte mémoire suppose que toutes les tâches d'une VM sont en mémoire en même
+  temps, ce qui est vrai avec run_all.sh (tout est lancé ensemble).

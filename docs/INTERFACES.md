@@ -6,13 +6,13 @@ Tout changement de format = une pull request qui modifie AUSSI ce fichier, relue
 | Rôle | Membre | Produit | Utilise |
 |---|---|---|---|
 | A : infra et orchestrateur | Maxime | machines.csv, .status, results.csv, experiments.csv | allocations |
-| B : benchmarks et modèle | ? | profiles.csv, fonction d'évaluation, validation prédit/réel | machines.csv |
-| C : NSGA-II | ? | pareto.csv, sol_*.csv, allocation_nsga.csv | tasks, machines, profiles |
+| B : benchmarks et modèle | Ali | profiles.csv, fonction d'évaluation, validation prédit/réel | machines.csv |
+| C : NSGA-II | Théotime | pareto.csv, sol_*.csv, allocation_nsga.csv | tasks, machines, profiles |
 
 ## Conventions
 - Séparateur virgule, POINT décimal, une ligne d'en-tête, fins de ligne LF.
 - Unités dans le nom des colonnes : _s, _kb, _mb, _usd.
-- Zone et projet : uniquement dans scripts/config.sh (europe-west9-b).
+- Zone et projet : uniquement dans scripts/config.sh (europe-west9-a).
 
 ## Infrastructure (data/machines.csv) – A
     vm,machine_type,vcpu,ram_mb,price_per_hour_usd
@@ -36,6 +36,8 @@ Choisir des tailles donnant 30 s à 2 min de calcul par tâche, sinon on mesure 
     workload,size,machine_type,runs,mean_runtime_s,median_runtime_s,std_runtime_s,max_rss_kb
 Chaque (workload, size) de tasks.csv doit être mesuré sur CHAQUE machine_type.
 Le modèle utilise median_runtime_s (robuste aux pics). Temps = runtime_s du JSON.
+Mesures brutes : data/benchmark_<machine_type>.csv (scripts/benchmark_vms.sh),
+puis profiles.csv avec scripts/make_profiles.sh.
 
 ## Allocation (data/allocation_*.csv) – scheduler -> orchestrateur
     task_id,workload,size,vm
@@ -72,10 +74,14 @@ Surcoûts mesurés (à intégrer au modèle) :
 Quota du projet : 16 vCPU toutes régions confondues, donc 8 VMs à 2 vCPU au maximum.
 
 ## Sortie NSGA-II (data/pareto/) – C
-- pareto.csv : solution_id,makespan_pred_s,cost_pred_usd,mem_violation_mb
+- pareto.csv : solution_id,makespan_pred_s,cost_pred_usd,mem_violation_mb,n_vms
 - sol_001.csv, sol_002.csv... : une allocation par solution du front
-- data/allocation_nsga.csv : la solution choisie pour l'exécution
+- pareto.svg : le front (bleu), le vrai front par recherche exhaustive (cercles), Round-Robin (rouge)
+- run.txt : graine, paramètres, solution choisie, comparaison avec le vrai front
+- data/allocation_nsga.csv : la solution choisie pour l'exécution (la plus proche du point idéal,
+  makespan et coût ramenés entre 0 et 1 sur le front)
 - Toujours fixer et noter la graine aléatoire (seed) pour la reproductibilité.
+- Programme : scheduler/nsga2.go. Le nombre de VMs n'est pas fixé : l'algo peut laisser une VM vide.
 
 ## Résultats d'exécution – A
 - results/<experiment_id>/<TASK_ID>.status :
@@ -88,14 +94,21 @@ Quota du projet : 16 vCPU toutes régions confondues, donc 8 VMs à 2 vCPU au ma
 - experiment_id : AAAAMMJJ-HHMM_<strategie>_r<k>, ex. 20261023-1530_rr_r1
 
 ## Modèle commun de prédiction (identique pour tous)
-A REVOIR (B) : la formule ci-dessous ne vaut que pour le mode "tout en même temps".
-Avec les modes file et dépendances, le makespan se calcule en simulant les règles de la section Exécution.
-Ancienne formule, mode "tout en même temps" (l'OS partage les vCPU) :
-    fin(VM)  = max( somme des temps des tâches de la VM / vcpu , temps de la plus longue )
+Vaut pour les modes "tout en même temps" et "file par VM" (mode utilisé pour la comparaison finale).
+Nos VMs ont 2 vCPU mais 1 seul coeur physique (2 threads, voir lscpu) : deux tâches simultanées vont
+à peu près aussi vite qu'en série. L'ordre des tâches dans la file ne change donc pas la fin de la VM.
+    fin(VM)  = somme des temps des tâches de la VM   (validé : +3 % sur le makespan Round-Robin)
     makespan = max des fin(VM)
-    coût     = somme sur les VMs de price_per_hour_usd / 3600 * fin(VM)
+    coût     = somme sur les VMs UTILISEES de price_per_hour_usd / 3600 * (préparation + makespan)
+               préparation = moyenne de total_s dans data/vm_setup.csv pour ce machine_type (~46 s)
+               (une VM est payée dès sa création et jusqu'à la fin ; une VM sans tâche n'est pas créée)
     mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)
+Le coût mesuré (collect_results.sh) utilise la même formule avec le makespan mesuré.
+Pas couvert : le mode dépendances (il faudrait simuler les règles de la section Exécution)
+et le surcoût SSH d'environ 3 s par VM en mode file.
 En Go : allocation[i] = indice de la VM de la tâche i (c'est aussi le chromosome NSGA-II).
+Implémenté dans tools/predict/main.go (B). Dernière ligne affichée :
+    prediction,<makespan_s>,<cost_usd>,<mem_violation_mb>
 
 ## Branches git
 prod-<prénom> pour travailler, pull request relue par un autre membre pour fusionner.

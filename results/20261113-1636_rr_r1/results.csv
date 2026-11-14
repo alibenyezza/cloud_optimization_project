@@ -1,0 +1,13 @@
+experiment_id,task_id,workload,size,vm,machine_type,exit_code,start_s,end_s,duration_s,runtime_s
+20261113-1636_rr_r1,T1,cpu_task,20000000,cloudopt-vm1,e2-highcpu-2,0,0.005,49.811,49.806,47.936710845
+20261113-1636_rr_r1,T10,matrix_task,2000,cloudopt-vm1,e2-highcpu-2,0,0.002,36.340,36.338,33.069321943
+20261113-1636_rr_r1,T11,sort_task,50000000,cloudopt-vm2,e2-standard-2,0,0.003,18.584,18.581,14.661565536
+20261113-1636_rr_r1,T12,memory_task,1024,cloudopt-vm3,n2-standard-2,0,0.002,11.493,11.491,7.993522981
+20261113-1636_rr_r1,T2,cpu_task,40000000,cloudopt-vm2,e2-standard-2,0,0.003,79.860,79.858,77.912429996
+20261113-1636_rr_r1,T3,matrix_task,2000,cloudopt-vm3,n2-standard-2,0,0.005,28.136,28.130,24.981164952
+20261113-1636_rr_r1,T4,matrix_task,2500,cloudopt-vm1,e2-highcpu-2,0,0.003,53.112,53.109,51.0487094
+20261113-1636_rr_r1,T5,sort_task,50000000,cloudopt-vm2,e2-standard-2,0,0.002,18.991,18.989,14.88359804
+20261113-1636_rr_r1,T6,sort_task,100000000,cloudopt-vm3,n2-standard-2,0,0.001,28.109,28.108,17.80770744
+20261113-1636_rr_r1,T7,memory_task,1024,cloudopt-vm1,e2-highcpu-2,0,0.000,5.881,5.881,3.005359519
+20261113-1636_rr_r1,T8,memory_task,1536,cloudopt-vm2,e2-standard-2,0,0.000,8.147,8.147,4.86946054
+20261113-1636_rr_r1,T9,cpu_task,20000000,cloudopt-vm3,n2-standard-2,0,0.005,16.019,16.014,14.73616085
