@@ -1,0 +1,14 @@
+# Menu du générateur de scénarios (tools/gen_tasks).
+# Une ligne = un couple (workload, taille) que gen_tasks peut tirer. Poids optionnel (défaut 1).
+# A REMPLACER par les couples réellement mesurés dans profiles.csv (partie d'Ali).
+# Durées indicatives sur vm1, NON mesurées : cpu 20M ~25 s, 40M ~65 s ; matrix 2500 ~22 s, 3500 ~60 s ;
+# memory (avec MEM_PASSES=400) 512 ~30 s, 1024 ~60 s ; sort 80M et 150M : à mesurer (640 Mo et 1,2 Go de RAM).
+workload,size,weight
+cpu_task,20000000,1
+cpu_task,40000000,1
+matrix_task,2500,1
+matrix_task,3500,1
+memory_task,512,1
+memory_task,1024,1
+sort_task,80000000,1
+sort_task,150000000,1
