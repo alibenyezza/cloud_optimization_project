@@ -99,7 +99,7 @@ Nos VMs ont 2 vCPU mais 1 seul coeur physique (2 threads, voir lscpu) : deux tâ
 à peu près aussi vite qu'en série. L'ordre des tâches dans la file ne change donc pas la fin de la VM.
     fin(VM)  = somme des temps des tâches de la VM   (validé : +3 % sur le makespan Round-Robin)
     makespan = max des fin(VM)
-    coût     = somme sur les VMs UTILISÉES de price_per_hour_usd / 3600 * (préparation + makespan)
+    coût     = somme sur les VMs UTILISEES de price_per_hour_usd / 3600 * (préparation + makespan)
                préparation = moyenne de total_s dans data/vm_setup.csv pour ce machine_type (~46 s)
                (une VM est payée dès sa création et jusqu'à la fin ; une VM sans tâche n'est pas créée)
     mémoire  = somme des max_rss des tâches d'une VM <= 90 % de ram_mb   (contrainte)

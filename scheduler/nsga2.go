@@ -1,6 +1,6 @@
 // nsga2 : NSGA-II pour placer les tâches sur les VMs, avec 2 objectifs à minimiser :
 // le makespan et le coût. La mémoire de chaque VM est une contrainte.
-// Évaluation = modèle commun de docs/INTERFACES.md (même calcul que tools/predict),
+// Evaluation = modèle commun de docs/INTERFACES.md (même calcul que tools/predict),
 // avec le temps de préparation des VMs de data/vm_setup.csv.
 // Compilation : go build -o bin/nsga2 scheduler/nsga2.go
 // Usage       : ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv [SEED]
@@ -298,7 +298,7 @@ func nsga2(seed int64) []solution {
 		for k := 0; k < popSize; k++ {
 			all = append(all, evaluate(makeChild(tournament(pop, r), tournament(pop, r), r)))
 		}
-		// Élitisme : parents + enfants, on garde les popSize meilleurs.
+		// Elitisme : parents + enfants, on garde les popSize meilleurs.
 		// Les doublons (même makespan et même coût) passent en dernier, sinon la population
 		// se remplit de copies de la meilleure solution et l'algo n'explore plus.
 		rankAndCrowd(all)
