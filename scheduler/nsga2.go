@@ -1,6 +1,7 @@
 // nsga2 : NSGA-II pour placer les tâches sur les VMs, avec 2 objectifs à minimiser :
 // le makespan et le coût. La mémoire de chaque VM est une contrainte.
-// Évaluation = modèle commun de docs/INTERFACES.md (même calcul que tools/predict).
+// Évaluation = modèle commun de docs/INTERFACES.md (même calcul que tools/predict),
+// avec le temps de préparation des VMs de data/vm_setup.csv.
 // Compilation : go build -o bin/nsga2 scheduler/nsga2.go
 // Usage       : ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv [SEED]
 // Sorties     : data/pareto/ (pareto.csv, sol_XXX.csv, pareto.svg, run.txt) et data/allocation_nsga.csv
@@ -23,8 +24,10 @@ const (
 	popSize   = 100 // nombre de solutions dans la population
 	nGen      = 300 // nombre de générations
 	crossProb = 0.9 // probabilité de croisement
+	closeProb = 0.1 // probabilité de la mutation "fermer une VM"
 	outDir    = "data/pareto"
 	chosenOut = "data/allocation_nsga.csv"
+	setupPath = "data/vm_setup.csv"
 )
 
 type task struct{ id, workload, size string }
@@ -32,6 +35,7 @@ type task struct{ id, workload, size string }
 type vm struct {
 	name, mtype  string
 	ramMB, price float64
+	setup        float64 // temps de préparation (création + SSH + déploiement), payé aussi
 }
 
 // Données du problème, lues une fois au début
@@ -84,8 +88,22 @@ func num(s, what string) float64 {
 }
 
 func load(tasksPath, machinesPath, profilesPath string) {
+	// Préparation moyenne par machine_type (data/vm_setup.csv) ; type jamais mesuré : moyenne de tout
+	setupSum, setupN := map[string]float64{}, map[string]float64{}
+	all, count := 0.0, 0.0
+	for _, r := range readCSV(setupPath) {
+		t := num(r[6], "total_s")
+		setupSum[r[2]] += t
+		setupN[r[2]]++
+		all += t
+		count++
+	}
 	for _, r := range readCSV(machinesPath) {
-		vms = append(vms, vm{name: r[0], mtype: r[1], ramMB: num(r[3], "ram_mb"), price: num(r[4], "price_per_hour_usd")})
+		m := vm{name: r[0], mtype: r[1], ramMB: num(r[3], "ram_mb"), price: num(r[4], "price_per_hour_usd"), setup: all / count}
+		if setupN[m.mtype] > 0 {
+			m.setup = setupSum[m.mtype] / setupN[m.mtype]
+		}
+		vms = append(vms, m)
 	}
 	type prof struct{ runtime, rssMB float64 }
 	profiles := map[string]prof{}
@@ -129,10 +147,10 @@ func evaluate(alloc []int) solution {
 			s.violation += mem[v] - limit
 		}
 	}
-	// Une VM utilisée est payée jusqu'à la fin, une VM vide n'est pas louée
+	// Une VM utilisée est payée de sa création jusqu'à la fin, une VM vide n'est pas créée
 	for v := range vms {
 		if used[v] {
-			s.cost += vms[v].price / 3600 * s.makespan
+			s.cost += vms[v].price / 3600 * (vms[v].setup + s.makespan)
 			s.nVMs++
 		}
 	}
@@ -247,6 +265,17 @@ func makeChild(p1, p2 solution, r *rand.Rand) []int {
 	for i := range child {
 		if r.Float64() < 1.0/float64(n) { // en moyenne une tâche change de VM
 			child[i] = r.Intn(len(vms))
+		}
+	}
+	// Mutation "fermer une VM" : toutes les tâches d'une VM partent sur une autre.
+	// Sans elle, l'algo explore mal les solutions avec moins de VMs (il faudrait bouger
+	// beaucoup de tâches en même temps par hasard).
+	if r.Float64() < closeProb {
+		from, to := r.Intn(len(vms)), r.Intn(len(vms))
+		for i := range child {
+			if child[i] == from {
+				child[i] = to
+			}
 		}
 	}
 	return child
@@ -444,6 +473,7 @@ func writeSVG(path string, pop, front, exact []solution, chosen, rr solution) {
 	}
 	for _, s := range front {
 		fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="4" fill="#1f5fbf"/>`+"\n", px(s.makespan), py(s.cost))
+		fmt.Fprintf(&b, `<text x="%.1f" y="%.1f" fill="#1f5fbf">%d VM</text>`+"\n", px(s.makespan)+10, py(s.cost)+16, s.nVMs)
 	}
 	fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="9" fill="none" stroke="#1a9c3c" stroke-width="3"/>`+"\n", px(chosen.makespan), py(chosen.cost))
 	fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="9" height="9" fill="#d62728"/>`+"\n", px(rr.makespan)-4.5, py(rr.cost)-4.5)
@@ -507,8 +537,8 @@ func main() {
 
 	exact := exactFront()
 	var report strings.Builder
-	fmt.Fprintf(&report, "seed=%d population=%d generations=%d croisement=%.1f mutation=1/%d\n",
-		seed, popSize, nGen, crossProb, len(tasks))
+	fmt.Fprintf(&report, "seed=%d population=%d generations=%d croisement=%.1f mutation=1/%d fermer_vm=%.1f\n",
+		seed, popSize, nGen, crossProb, len(tasks), closeProb)
 	fmt.Fprintf(&report, "front NSGA-II : %d solutions\n", len(front))
 	for i, s := range front {
 		mark := ""

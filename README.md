@@ -48,12 +48,14 @@ Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevé
 ## Arborescence
 
     workloads/      sources Go des 4 workloads
-    scheduler/      round_robin.go (baseline) ; NSGA-II à venir
-    tools/gantt/    génération de la timeline SVG d'une expérience
+    scheduler/      round_robin.go (baseline), nsga2.go (NSGA-II, sorties dans data/pareto/)
+    tools/gantt/    timeline SVG d'une expérience (flèches de dépendance et chemin critique si tasks.csv)
     tools/predict/  makespan, coût et mémoire prévus d'une allocation (modèle de INTERFACES.md)
-    scripts/        config.sh, create_vms.sh, deploy_all.sh, run_task.sh, run_all.sh,
-                    collect_results.sh, run_experiment.sh, delete_vms.sh, benchmark.sh,
-                    benchmark_vms.sh, make_profiles.sh
+    tools/gen_tasks/ génération de scénarios reproductibles (graine), avec ou sans dépendances
+    scripts/        config.sh, create_vms.sh, setup_vms.sh, deploy_all.sh, delete_vms.sh,
+                    run_task.sh, run_all.sh, run_all_queue.sh, run_all_dag.sh,
+                    collect_results.sh, run_experiment.sh, scaling_experiment.sh, demo.sh,
+                    benchmark.sh, benchmark_vms.sh, make_profiles.sh
     data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
     results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
     docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3
@@ -93,6 +95,20 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
     # 6. Supprimer les VMs en fin de session (elles coûtent même inactives)
     ./scripts/delete_vms.sh
 
+### Avec beaucoup de tâches et des dépendances
+
+    go build -o bin/gen_tasks tools/gen_tasks/main.go
+    ./bin/gen_tasks -n 40 -seed 1 -deps 0.4 -out data/tasks_40_dag.csv     # 40 tâches, 40 % avec dépendances
+    ./bin/round_robin_scheduler data/tasks_40_dag.csv data/machines.csv data/allocation_rr.csv
+    ./scripts/setup_vms.sh data/allocation_rr.csv                            # seulement les VMs utilisées, temps mesuré
+    DAG=data/tasks_40_dag.csv ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
+    ./scripts/delete_vms.sh
+
+- `QUEUE=1` à la place de `DAG=...` : file d'attente par VM sans dépendances.
+- `./scripts/scaling_experiment.sh TASKS.csv "1 2 3 4 6"` : même lot sur 1, 2, 3... VMs identiques.
+- `./scripts/demo.sh` : démo de soutenance (VMs allumées avant).
+- Règles exactes de chaque mode et surcoûts mesurés : docs/INTERFACES.md, section Exécution.
+
 Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
 - `allocation.csv` : l'allocation exacte exécutée ;
 - `<TASK>.out`, `.err`, `.status` : sortie, erreurs, code de retour et horaires de chaque tâche ;
@@ -125,6 +141,9 @@ Scripts utiles séparément :
 - TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
 - TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
 - Partie B : scénario final, mesures sur les 3 types de VM, `profiles.csv` et validation du modèle (`docs/write_up_partie_B.txt`).
+- TD5 : file d'attente par VM, VMs à la demande, dépendances entre tâches, générateur de scénarios,
+  expérience sur le nombre de VMs (3 VMs plus lentes que 2 sur le scénario de démo).
+- Partie C : NSGA-II (`scheduler/nsga2.go`), vérifié par recherche exhaustive sur le scénario de 12 tâches.
 
 ## Rapport (Word)
 

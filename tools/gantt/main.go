@@ -1,13 +1,16 @@
 // gantt : génère la timeline (diagramme de Gantt) d'une expérience au format SVG.
 // Une ligne par tâche, regroupées par VM ; les tâches simultanées d'une VM sont empilées.
 // Compilation : go build -o bin/gantt tools/gantt/main.go
-// Usage       : ./bin/gantt results/<ID>/results.csv results/<ID>/gantt.svg
+// Usage       : ./bin/gantt results/<ID>/results.csv results/<ID>/gantt.svg [results/<ID>/tasks.csv]
+// Avec tasks.csv (colonne depends_on) : une flèche par dépendance, et le chemin critique
+// (la chaîne de tâches qui fixe le makespan) entouré en noir, ses flèches en rouge.
 package main
 
 import (
 	"encoding/csv"
 	"fmt"
 	"html"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -16,7 +19,7 @@ import (
 
 type task struct {
 	id, workload, vm, mtype, code string
-	start, end                    float64
+	start, end, yc                float64
 	lane                          int
 }
 
@@ -31,8 +34,8 @@ func fail(msg string, a ...any) {
 }
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Fprintln(os.Stderr, "Usage: gantt RESULTS.csv SORTIE.svg")
+	if len(os.Args) != 3 && len(os.Args) != 4 {
+		fmt.Fprintln(os.Stderr, "Usage: gantt RESULTS.csv SORTIE.svg [TASKS.csv]")
 		os.Exit(2)
 	}
 	f, err := os.Open(os.Args[1])
@@ -76,6 +79,42 @@ func main() {
 	if makespan <= 0 {
 		makespan = 1
 	}
+
+	// Dépendances (optionnel) et chemin critique
+	byID := map[string]*task{}
+	for _, ts := range byVM {
+		for _, t := range ts {
+			byID[t.id] = t
+		}
+	}
+	deps := map[string][]string{}
+	if len(os.Args) == 4 {
+		deps = readDeps(os.Args[3])
+	}
+	critical := map[string]bool{}
+	if len(deps) > 0 {
+		// on part de la tâche qui finit en dernier, et on remonte vers la dépendance qui a fini le plus tard
+		var cur *task
+		for _, t := range byID {
+			if cur == nil || t.end > cur.end {
+				cur = t
+			}
+		}
+		for cur != nil {
+			critical[cur.id] = true
+			var prev *task
+			for _, d := range deps[cur.id] {
+				if p, ok := byID[d]; ok && (prev == nil || p.end > prev.end) {
+					prev = p
+				}
+			}
+			cur = prev
+		}
+	}
+	nDeps := 0
+	for _, ds := range deps {
+		nDeps += len(ds)
+	}
 	vms := make([]string, 0, len(byVM))
 	for vm := range byVM {
 		vms = append(vms, vm)
@@ -118,7 +157,12 @@ func main() {
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%.0f" height="%.0f" font-family="Arial, sans-serif" font-size="12">`+"\n", width, height)
 	fmt.Fprintf(&b, `<rect width="100%%" height="100%%" fill="#ffffff"/>`+"\n")
 	fmt.Fprintf(&b, `<text x="%.0f" y="28" font-size="18" font-weight="bold">Timeline – %s</text>`+"\n", left, html.EscapeString(exp))
-	fmt.Fprintf(&b, `<text x="%.0f" y="50" fill="#555">makespan = %.2f s, %d VMs</text>`+"\n", left, makespan, len(vms))
+	sub := fmt.Sprintf("makespan = %.2f s, %d VMs", makespan, len(vms))
+	if nDeps > 0 {
+		sub += fmt.Sprintf(", %d dépendances, chemin critique : %d tâches (entourées en noir)", nDeps, len(critical))
+	}
+	fmt.Fprintf(&b, `<text x="%.0f" y="50" fill="#555">%s</text>`+"\n", left, html.EscapeString(sub))
+	b.WriteString(`<defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#666"/></marker><marker id="flc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>` + "\n")
 
 	// Graduations de l'axe du temps
 	step := 1.0
@@ -148,11 +192,15 @@ func main() {
 				c = "#888888"
 			}
 			stroke := "none"
+			if critical[t.id] {
+				stroke = "#000000"
+			}
 			if t.code != "0" {
 				stroke = "#d62728"
 			}
 			x0, w := left+t.start*scale, (t.end-t.start)*scale
 			ty := y + float64(t.lane)*laneH
+			t.yc = ty + laneH/2
 			fmt.Fprintf(&b, `<g><title>%s %s : %.2f → %.2f s (%.2f s), code %s</title>`, t.id, t.workload, t.start, t.end, t.end-t.start, t.code)
 			fmt.Fprintf(&b, `<rect x="%.1f" y="%.0f" width="%.1f" height="%.0f" rx="3" fill="%s" stroke="%s" stroke-width="2"/>`, x0, ty+2, w, laneH-4, c, stroke)
 			if w > 28 {
@@ -163,6 +211,29 @@ func main() {
 		y += h + gap
 	}
 
+	// Flèches de dépendance : de la fin de la dépendance au début de la tâche qui l'attendait
+	for id, ds := range deps {
+		t, ok := byID[id]
+		if !ok {
+			continue
+		}
+		for _, d := range ds {
+			p, ok := byID[d]
+			if !ok {
+				continue
+			}
+			x1, y1 := left+p.end*scale, p.yc
+			x2, y2 := left+t.start*scale, t.yc
+			col, mk, sw := "#666", "fl", "1.2"
+			if critical[id] && critical[d] {
+				col, mk, sw = "#c0392b", "flc", "2"
+			}
+			dx := math.Max(20, (x2-x1)/2)
+			fmt.Fprintf(&b, `<path d="M%.1f %.1f C%.1f %.1f %.1f %.1f %.1f %.1f" fill="none" stroke="%s" stroke-width="%s" marker-end="url(#%s)" opacity="0.85"/>`+"\n",
+				x1, y1, x1+dx, y1, x2-dx, y2, x2, y2, col, sw, mk)
+		}
+	}
+
 	// Légende
 	lx := left
 	for _, w := range []string{"cpu_task", "memory_task", "matrix_task", "sort_task"} {
@@ -170,10 +241,50 @@ func main() {
 		lx += 130
 	}
 	fmt.Fprintf(&b, `<rect x="%.0f" y="%.0f" width="14" height="14" fill="none" stroke="#d62728" stroke-width="2"/><text x="%.0f" y="%.0f">échec</text>`+"\n", lx, axisY+50, lx+20, axisY+61)
+	if nDeps > 0 {
+		lx += 80
+		fmt.Fprintf(&b, `<rect x="%.0f" y="%.0f" width="14" height="14" fill="none" stroke="#000" stroke-width="2"/><text x="%.0f" y="%.0f">chemin critique</text>`+"\n", lx, axisY+50, lx+20, axisY+61)
+	}
 	b.WriteString("</svg>\n")
 
 	if err := os.WriteFile(os.Args[2], []byte(b.String()), 0o644); err != nil {
 		fail("%v", err)
 	}
 	fmt.Printf("Timeline écrite : %s (%d tâches, makespan %.2f s)\n", os.Args[2], len(recs)-1, makespan)
+}
+
+// readDeps lit la colonne depends_on d'un tasks.csv (ids séparés par ";"). Sans colonne : aucune dépendance.
+func readDeps(path string) map[string][]string {
+	f, err := os.Open(path)
+	if err != nil {
+		fail("%v", err)
+	}
+	defer f.Close()
+	r := csv.NewReader(f)
+	r.FieldsPerRecord = -1
+	recs, err := r.ReadAll()
+	if err != nil || len(recs) == 0 {
+		fail("%s vide ou illisible", path)
+	}
+	c := -1
+	for i, h := range recs[0] {
+		if strings.TrimSpace(h) == "depends_on" {
+			c = i
+		}
+	}
+	out := map[string][]string{}
+	if c < 0 {
+		return out
+	}
+	for _, row := range recs[1:] {
+		if c >= len(row) || strings.TrimSpace(row[c]) == "" {
+			continue
+		}
+		for _, d := range strings.Split(row[c], ";") {
+			if d = strings.TrimSpace(d); d != "" {
+				out[strings.TrimSpace(row[0])] = append(out[strings.TrimSpace(row[0])], d)
+			}
+		}
+	}
+	return out
 }

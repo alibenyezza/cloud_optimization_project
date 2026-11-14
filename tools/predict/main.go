@@ -1,5 +1,6 @@
 // predict : calcule le makespan, le coût et la mémoire prévus d'une allocation,
-// avec le modèle commun de docs/INTERFACES.md et les mesures de data/profiles.csv.
+// avec le modèle commun de docs/INTERFACES.md, les mesures de data/profiles.csv
+// et le temps de préparation des VMs de data/vm_setup.csv.
 // Compilation : go build -o bin/predict tools/predict/main.go
 // Usage       : ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_rr.csv
 // Dernière ligne : prediction,<makespan_s>,<cost_usd>,<mem_violation_mb>
@@ -54,6 +55,24 @@ func num(s, what string) float64 {
 		fail("%s invalide : %q", what, s)
 	}
 	return v
+}
+
+// setupTimes : temps moyen de préparation d'une VM (création + SSH + déploiement) par machine_type,
+// lu dans data/vm_setup.csv. Un type jamais mesuré prend la moyenne de toutes les lignes.
+func setupTimes(path string) (map[string]float64, float64) {
+	sum, n := map[string]float64{}, map[string]float64{}
+	all, count := 0.0, 0.0
+	for _, r := range readCSV(path)[1:] {
+		t := num(r[6], "total_s")
+		sum[r[2]] += t
+		n[r[2]]++
+		all += t
+		count++
+	}
+	for k := range sum {
+		sum[k] /= n[k]
+	}
+	return sum, all / count
 }
 
 func main() {
@@ -129,10 +148,16 @@ func main() {
 			violation += mem[vm] - limit
 		}
 	}
-	// Coût : une VM utilisée reste allumée jusqu'à la fin de l'expérience, une VM sans tâche n'est pas louée
+	// Coût : une VM utilisée est payée dès sa création (préparation) et jusqu'à la fin de l'expérience,
+	// une VM sans tâche n'est pas créée
+	setup, setupAll := setupTimes("data/vm_setup.csv")
 	for _, vm := range order {
 		if count[vm] > 0 {
-			cost += machines[vm].price / 3600 * makespan
+			s, ok := setup[machines[vm].mtype]
+			if !ok {
+				s = setupAll
+			}
+			cost += machines[vm].price / 3600 * (s + makespan)
 		}
 	}
 	fmt.Printf("prediction,%.2f,%.6f,%.0f\n", makespan, cost, violation)

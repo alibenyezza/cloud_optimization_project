@@ -9,11 +9,14 @@ fi
 TASK_ID="$1"; WORKLOAD="$2"; SIZE="$3"; VM="$4"; ZONE="$5"
 OUT="${6:-results}"
 mkdir -p "$OUT"
+source "$(dirname "$0")/config.sh"
+EXTRA=""
+[ "$WORKLOAD" = memory_task ] && EXTRA="--passes $MEM_PASSES"
 echo "[$TASK_ID] lancement : $WORKLOAD --size $SIZE sur $VM"
 
 START=$(date +%s.%N)
 gcloud compute ssh "$VM" --zone="$ZONE" --quiet \
-  --command="echo host: \$(hostname); cd ~/cloud-optimization && ./bin/$WORKLOAD --size $SIZE" \
+  --command="echo host: \$(hostname); cd ~/cloud-optimization && ./bin/$WORKLOAD --size $SIZE $EXTRA" \
   > "$OUT/$TASK_ID.out" 2> "$OUT/$TASK_ID.err" < /dev/null
 CODE=$?
 END=$(date +%s.%N)

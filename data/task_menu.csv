@@ -1,0 +1,15 @@
+# Menu du générateur de scénarios (tools/gen_tasks).
+# Une ligne = un couple (workload, taille) que gen_tasks peut tirer. Poids optionnel (défaut 1).
+# Uniquement des couples mesurés dans profiles.csv (partie B, 13/11/2026, MEM_PASSES=5),
+# sinon predict et nsga2 ne peuvent pas prévoir leur durée.
+# Durées médianes sur e2 / n2 : cpu 20M 25 / 7 s, 40M 68 / 19 s ; matrix 2000 13 / 10 s, 2500 25 / 19 s ;
+# sort 50M 7 / 6 s, 100M 15 / 12 s ; memory 1024 et 1536 : environ 1 à 2 s.
+workload,size,weight
+cpu_task,20000000,1
+cpu_task,40000000,1
+matrix_task,2000,1
+matrix_task,2500,1
+sort_task,50000000,1
+sort_task,100000000,1
+memory_task,1024,1
+memory_task,1536,1
