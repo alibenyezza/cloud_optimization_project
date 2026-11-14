@@ -6,6 +6,9 @@
 //
 // Compilation : go build -o bin/gen_tasks tools/gen_tasks/main.go
 // Usage       : ./bin/gen_tasks -n 40 -seed 1 -menu data/task_menu.csv -out data/tasks_40.csv
+// Dépendances : -deps 0.5 -maxdeps 2 : chaque tâche (sauf la 1re) a une chance sur 2 de dépendre
+//               de 1 à 2 tâches PRÉCÉDENTES. Comme on ne dépend que du passé, il n'y a jamais de cycle.
+//               Ajoute une colonne depends_on (ids séparés par ";") lue par run_all_dag.sh.
 package main
 
 import (
@@ -29,6 +32,8 @@ func main() {
 	seed := flag.Int64("seed", 1, "graine aléatoire (à noter dans le rapport)")
 	menuF := flag.String("menu", "data/task_menu.csv", "menu : workload,size[,weight]")
 	outF := flag.String("out", "data/tasks_gen.csv", "fichier tasks.csv produit")
+	pDep := flag.Float64("deps", 0, "probabilité qu'une tâche ait des dépendances (0 = aucune)")
+	maxDeps := flag.Int("maxdeps", 2, "nombre maximum de dépendances par tâche")
 	flag.Parse()
 	if *n < 1 {
 		fail("-n doit être >= 1")
@@ -83,7 +88,15 @@ func main() {
 	if err != nil {
 		fail("%v", err)
 	}
-	fmt.Fprintln(out, "task_id,workload,size")
+	if *pDep < 0 || *pDep > 1 || *maxDeps < 1 {
+		fail("-deps doit être entre 0 et 1, -maxdeps >= 1")
+	}
+	if *pDep > 0 {
+		fmt.Fprintln(out, "task_id,workload,size,depends_on")
+	} else {
+		fmt.Fprintln(out, "task_id,workload,size")
+	}
+	nDep := 0
 	count := map[string]int{}
 	width := len(strconv.Itoa(*n))
 	for i := 1; i <= *n; i++ {
@@ -92,12 +105,29 @@ func main() {
 		for ; k < len(menu)-1 && x >= menu[k].weight; k++ {
 			x -= menu[k].weight
 		}
-		fmt.Fprintf(out, "T%0*d,%s,%s\n", width, i, menu[k].w, menu[k].s)
+		id := fmt.Sprintf("T%0*d", width, i)
+		if *pDep == 0 {
+			fmt.Fprintf(out, "%s,%s,%s\n", id, menu[k].w, menu[k].s)
+		} else {
+			var deps []string
+			if i > 1 && rng.Float64() < *pDep {
+				nd := 1 + rng.Intn(*maxDeps)
+				for _, j := range rng.Perm(i - 1)[:min(nd, i-1)] {
+					deps = append(deps, fmt.Sprintf("T%0*d", width, j+1))
+				}
+				sort.Strings(deps)
+				nDep += len(deps)
+			}
+			fmt.Fprintf(out, "%s,%s,%s,%s\n", id, menu[k].w, menu[k].s, strings.Join(deps, ";"))
+		}
 		count[menu[k].w+" "+menu[k].s]++
 	}
 	out.Close()
 
 	fmt.Printf("%d tâches écrites dans %s (graine %d)\n", *n, *outF, *seed)
+	if *pDep > 0 {
+		fmt.Printf("  %d dépendances au total\n", nDep)
+	}
 	keys := make([]string, 0, len(count))
 	for k := range count {
 		keys = append(keys, k)
