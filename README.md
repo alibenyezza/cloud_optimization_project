@@ -51,6 +51,7 @@ Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevé
 
     workloads/      sources Go des 4 workloads
     scheduler/      round_robin.go (baseline), nsga2.go (NSGA-II, sorties dans data/pareto/)
+    model/          modèle commun : simulation des règles de l'orchestrateur (predict et nsga2), tests
     tools/gantt/    timeline SVG d'une expérience (flèches de dépendance et chemin critique si tasks.csv)
     tools/predict/  makespan, coût et mémoire prévus d'une allocation (modèle de INTERFACES.md)
     tools/gen_tasks/ génération de scénarios reproductibles (graine), avec ou sans dépendances
@@ -76,6 +77,7 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
     go build -o bin/gantt tools/gantt/main.go
     go build -o bin/predict tools/predict/main.go
     go build -o bin/nsga2 scheduler/nsga2.go
+    go test ./model                                  # tests du modèle (cas calculés à la main)
 
     # 2. (Seulement si profiles.csv n'est pas à jour pour ce tasks.csv) Mesurer chaque tâche
     #    sur chaque type de VM (5 fois, environ 20 min), puis faire profiles.csv

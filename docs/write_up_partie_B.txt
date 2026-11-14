@@ -93,3 +93,30 @@ et refaire une répétition si les deux ne collent pas.
   mémoire entre tâches.
 - La contrainte mémoire suppose que toutes les tâches d'une VM sont en mémoire en même
   temps, ce qui est vrai avec run_all.sh (tout est lancé ensemble).
+  (corrigé le 14/11 : voir 8)
+
+8. Mise à jour du 14/11 (après le TD5 de Maxime)
+
+- Modèle : model/model.go simule les règles de l'orchestrateur (file par VM, dépendances,
+  première tâche prête dans l'ordre de l'allocation). Un seul code pour predict et nsga2.
+  Sans dépendances, il redonne la somme (82,97 s sur Round-Robin) : la validation reste vraie.
+- Mémoire : on prend le pic des tâches qui tournent en même temps (2 au plus en mode file),
+  au lieu de la somme de toutes les tâches de la VM.
+- Coût : préparation de la VM (data/vm_setup.csv, ~46 s) + makespan, pour chaque VM utilisée.
+  Les coûts des 4 runs du 13/11 dans experiments.csv ont été recalculés avec cette formule
+  à partir de results/<id>/results.csv (les makespans ne changent pas) :
+  prévu 0,00876 USD, mesuré 0,00855 / 0,00856 / 0,00871 USD (hors run de 392 s) -> +2 %.
+  Les anciennes prédictions (67,2 s ; 0,00243 USD) sont gardées dans la section 5.
+- Tests : go test ./model (somme sans dépendances, dépendance entre 2 VMs, pic mémoire,
+  ordre de priorité, cycle refusé).
+
+9. A vérifier à la prochaine session GCP
+
+- vm3 (n2) est 3,5 fois plus rapide sur cpu_task, mais 1,3 fois seulement sur matrix et sort
+  (1,3 = rapport des fréquences 2,8 / 2,2 GHz). cpu_task fait presque seulement des divisions
+  entières (n % d). Hypothèse : le processeur de n2 est d'une génération plus récente, où la
+  division entière 64 bits est bien plus rapide. Non prouvé : lscpu complet (famille, modèle,
+  flags) et un petit test divisions / additions sur e2 et n2 pour le confirmer.
+- htGain : mesurer 2 tâches ensemble contre 1 seule sur chaque type (Maxime : 2 matrix_task
+  2200 ensemble en 29 s contre 24 s seule, donc un gain possible pour matrix).
+- MEM_PASSES=400 : remesurer memory_task avant de changer la valeur dans config.sh.
