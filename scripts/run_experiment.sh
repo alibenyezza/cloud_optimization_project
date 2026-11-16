@@ -4,6 +4,7 @@
 # Exemple : ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
 # File d'attente par VM (run_all_queue.sh) : QUEUE=1 ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
 # Avec dépendances (run_all_dag.sh)         : DAG=data/tasks.csv ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
+# Sans QUEUE ni DAG, refusé si une VM a plus de tâches que de vCPU (FORCE=1 pour forcer).
 source "$(dirname "$0")/config.sh"
 if [ "$#" -lt 2 ]; then
   echo "Usage: $0 ALLOCATION.csv STRATEGY [REPETITIONS] [PRED_MAKESPAN_S] [PRED_COST_USD]" >&2
@@ -17,6 +18,20 @@ if ! [[ "$STRATEGY" =~ ^[A-Za-z0-9_-]+$ ]]; then
 fi
 if ! [[ "$REP" =~ ^[0-9]+$ ]] || [ "$REP" -lt 1 ]; then
   echo "Erreur : REPETITIONS doit être un entier >= 1." >&2; exit 1
+fi
+# Sécurité : en mode "tout en même temps", toutes les tâches d'une VM sont en mémoire ensemble.
+# Le modèle suppose au plus vcpu tâches à la fois : au-delà, on refuse (vm1 n'a que 2 Go de RAM).
+if [ -z "${DAG:-}" ] && [ "${QUEUE:-0}" != 1 ] && [ "${FORCE:-0}" != 1 ]; then
+  TROP=$(tail -n +2 "$ALLOC" | tr -d '\r' | awk -F, -v mf="$MACHINES_FILE" '
+    BEGIN { while ((getline l < mf) > 0) { split(l, c, ","); vcpu[c[1]] = c[3] } }
+    NF >= 4 { n[$4]++ }
+    END { for (v in n) if (v in vcpu && n[v] > vcpu[v] + 0) printf "%s (%d tâches, %d vCPU) ", v, n[v], vcpu[v] }')
+  if [ -n "$TROP" ]; then
+    echo "Erreur : plus de tâches que de vCPU sur $TROP" >&2
+    echo "En mode \"tout en même temps\", elles seraient toutes en mémoire ensemble." >&2
+    echo "Utiliser QUEUE=1 (file par VM) ou DAG=tasks.csv (dépendances). FORCE=1 pour forcer." >&2
+    exit 1
+  fi
 fi
 go build -o bin/gantt tools/gantt/main.go || exit 1   # toujours à jour avec tools/gantt
 
