@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="330" font-family="Arial, sans-serif" font-size="12">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="190" y="28" font-size="18" font-weight="bold">Timeline – 20261116-1401_s40dag_nsga_r2</text>
+<text x="190" y="50" fill="#555">makespan = 201.51 s, 3 VMs, 19 dépendances, chemin critique : 3 tâches (entourées en noir)</text>
+<defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#666"/></marker><marker id="flc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<line x1="190.0" y1="62" x2="190.0" y2="250" stroke="#e5e5e5"/>
+<text x="190.0" y="266" text-anchor="middle" fill="#555">0</text>
+<line x1="306.1" y1="62" x2="306.1" y2="250" stroke="#e5e5e5"/>
+<text x="306.1" y="266" text-anchor="middle" fill="#555">30</text>
+<line x1="422.3" y1="62" x2="422.3" y2="250" stroke="#e5e5e5"/>
+<text x="422.3" y="266" text-anchor="middle" fill="#555">60</text>
+<line x1="538.4" y1="62" x2="538.4" y2="250" stroke="#e5e5e5"/>
+<text x="538.4" y="266" text-anchor="middle" fill="#555">90</text>
+<line x1="654.5" y1="62" x2="654.5" y2="250" stroke="#e5e5e5"/>
+<text x="654.5" y="266" text-anchor="middle" fill="#555">120</text>
+<line x1="770.6" y1="62" x2="770.6" y2="250" stroke="#e5e5e5"/>
+<text x="770.6" y="266" text-anchor="middle" fill="#555">150</text>
+<line x1="886.8" y1="62" x2="886.8" y2="250" stroke="#e5e5e5"/>
+<text x="886.8" y="266" text-anchor="middle" fill="#555">180</text>
+<text x="580" y="284" text-anchor="middle" fill="#555">temps depuis le début de l'expérience (s)</text>
+<rect x="190" y="68" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="90" font-weight="bold">cloudopt-vm1</text>
+<text x="10" y="105" fill="#555">e2-highcpu-2</text>
+<g><title>T11 matrix_task : 0.00 → 24.79 s (24.79 s), code 0</title><rect x="190.0" y="72" width="96.0" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="194.0" y="85" fill="#ffffff">T11</text></g>
+<g><title>T15 memory_task : 0.00 → 5.80 s (5.80 s), code 0</title><rect x="190.0" y="94" width="22.5" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T18 sort_task : 6.10 → 30.18 s (24.08 s), code 0</title><rect x="213.6" y="94" width="93.2" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="217.6" y="107" fill="#ffffff">T18</text></g>
+<g><title>T10 matrix_task : 25.34 → 47.33 s (22.00 s), code 0</title><rect x="288.1" y="72" width="85.2" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="292.1" y="85" fill="#ffffff">T10</text></g>
+<g><title>T23 cpu_task : 30.41 → 67.82 s (37.41 s), code 0</title><rect x="307.7" y="94" width="144.8" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="311.7" y="107" fill="#ffffff">T23</text></g>
+<g><title>T25 matrix_task : 47.63 → 69.67 s (22.04 s), code 0</title><rect x="374.4" y="72" width="85.3" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="378.4" y="85" fill="#ffffff">T25</text></g>
+<g><title>T28 memory_task : 67.87 → 71.50 s (3.63 s), code 0</title><rect x="452.7" y="94" width="14.0" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T29 cpu_task : 69.92 → 103.91 s (33.99 s), code 0</title><rect x="460.6" y="72" width="131.6" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="464.6" y="85" fill="#ffffff">T29</text></g>
+<g><title>T34 memory_task : 71.95 → 76.80 s (4.85 s), code 0</title><rect x="468.5" y="94" width="18.8" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T35 memory_task : 77.03 → 81.16 s (4.13 s), code 0</title><rect x="488.2" y="94" width="16.0" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T38 sort_task : 82.11 → 103.89 s (21.78 s), code 0</title><rect x="507.8" y="94" width="84.3" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="511.8" y="107" fill="#ffffff">T38</text></g>
+<g><title>T21 memory_task : 104.42 → 152.10 s (47.69 s), code 0</title><rect x="594.2" y="72" width="184.6" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/><text x="598.2" y="85" fill="#ffffff">T21</text></g>
+<g><title>T39 sort_task : 152.21 → 170.72 s (18.51 s), code 0</title><rect x="779.2" y="72" width="71.6" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="783.2" y="85" fill="#ffffff">T39</text></g>
+<rect x="190" y="128" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="150" font-weight="bold">cloudopt-vm2</text>
+<text x="10" y="165" fill="#555">e2-standard-2</text>
+<g><title>T03 matrix_task : 0.00 → 61.74 s (61.74 s), code 0</title><rect x="190.0" y="132" width="239.0" height="18" rx="3" fill="#54A24B" stroke="#000000" stroke-width="2"/><text x="194.0" y="145" fill="#ffffff">T03</text></g>
+<g><title>T16 matrix_task : 0.00 → 36.42 s (36.42 s), code 0</title><rect x="190.0" y="154" width="141.0" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="194.0" y="167" fill="#ffffff">T16</text></g>
+<g><title>T04 sort_task : 36.48 → 68.98 s (32.50 s), code 0</title><rect x="331.2" y="154" width="125.8" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="335.2" y="167" fill="#ffffff">T04</text></g>
+<g><title>T06 sort_task : 61.80 → 90.67 s (28.88 s), code 0</title><rect x="429.2" y="132" width="111.8" height="18" rx="3" fill="#B279A2" stroke="#000000" stroke-width="2"/><text x="433.2" y="145" fill="#ffffff">T06</text></g>
+<g><title>T05 memory_task : 69.92 → 74.71 s (4.79 s), code 0</title><rect x="460.6" y="154" width="18.5" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T07 memory_task : 74.99 → 79.72 s (4.73 s), code 0</title><rect x="480.3" y="154" width="18.3" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T17 sort_task : 80.07 → 103.91 s (23.84 s), code 0</title><rect x="500.0" y="154" width="92.3" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="504.0" y="167" fill="#ffffff">T17</text></g>
+<g><title>T19 memory_task : 91.21 → 95.95 s (4.74 s), code 0</title><rect x="543.1" y="132" width="18.3" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T22 sort_task : 96.27 → 153.02 s (56.74 s), code 0</title><rect x="562.7" y="132" width="219.6" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="566.7" y="145" fill="#ffffff">T22</text></g>
+<g><title>T24 memory_task : 104.42 → 152.10 s (47.68 s), code 0</title><rect x="594.2" y="154" width="184.6" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/><text x="598.2" y="167" fill="#ffffff">T24</text></g>
+<g><title>T30 matrix_task : 152.21 → 198.96 s (46.76 s), code 0</title><rect x="779.2" y="154" width="181.0" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="783.2" y="167" fill="#ffffff">T30</text></g>
+<g><title>T32 sort_task : 153.22 → 185.66 s (32.43 s), code 0</title><rect x="783.1" y="132" width="125.5" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="787.1" y="145" fill="#ffffff">T32</text></g>
+<g><title>T40 memory_task : 186.60 → 192.17 s (5.57 s), code 0</title><rect x="912.3" y="132" width="21.6" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<rect x="190" y="188" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="210" font-weight="bold">cloudopt-vm3</text>
+<text x="10" y="225" fill="#555">n2-standard-2</text>
+<g><title>T01 sort_task : 0.00 → 10.44 s (10.44 s), code 0</title><rect x="190.0" y="192" width="40.4" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="194.0" y="205" fill="#ffffff">T01</text></g>
+<g><title>T02 memory_task : 0.00 → 4.93 s (4.93 s), code 0</title><rect x="190.0" y="214" width="19.1" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T08 cpu_task : 5.07 → 16.05 s (10.99 s), code 0</title><rect x="209.6" y="214" width="42.5" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="213.6" y="227" fill="#ffffff">T08</text></g>
+<g><title>T09 cpu_task : 11.16 → 25.19 s (14.03 s), code 0</title><rect x="233.2" y="192" width="54.3" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="237.2" y="205" fill="#ffffff">T09</text></g>
+<g><title>T12 cpu_task : 16.23 → 30.32 s (14.10 s), code 0</title><rect x="252.8" y="214" width="54.6" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="256.8" y="227" fill="#ffffff">T12</text></g>
+<g><title>T13 cpu_task : 25.34 → 39.35 s (14.01 s), code 0</title><rect x="288.1" y="192" width="54.2" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="292.1" y="205" fill="#ffffff">T13</text></g>
+<g><title>T14 cpu_task : 30.41 → 44.51 s (14.09 s), code 0</title><rect x="307.7" y="214" width="54.6" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="311.7" y="227" fill="#ffffff">T14</text></g>
+<g><title>T20 cpu_task : 39.53 → 74.35 s (34.83 s), code 0</title><rect x="343.0" y="192" width="134.8" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="347.0" y="205" fill="#ffffff">T20</text></g>
+<g><title>T31 cpu_task : 44.59 → 61.35 s (16.77 s), code 0</title><rect x="362.6" y="214" width="64.9" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="366.6" y="227" fill="#ffffff">T31</text></g>
+<g><title>T33 cpu_task : 61.80 → 76.40 s (14.60 s), code 0</title><rect x="429.2" y="214" width="56.5" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="433.2" y="227" fill="#ffffff">T33</text></g>
+<g><title>T26 cpu_task : 75.00 → 171.87 s (96.88 s), code 0</title><rect x="480.3" y="192" width="375.0" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="484.3" y="205" fill="#ffffff">T26</text></g>
+<g><title>T36 cpu_task : 77.03 → 173.91 s (96.88 s), code 0</title><rect x="488.2" y="214" width="375.0" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="492.2" y="227" fill="#ffffff">T36</text></g>
+<g><title>T27 cpu_task : 172.44 → 201.51 s (29.06 s), code 0</title><rect x="857.5" y="192" width="112.5" height="18" rx="3" fill="#4C78A8" stroke="#000000" stroke-width="2"/><text x="861.5" y="205" fill="#ffffff">T27</text></g>
+<g><title>T37 cpu_task : 174.47 → 191.14 s (16.67 s), code 0</title><rect x="865.4" y="214" width="64.5" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="869.4" y="227" fill="#ffffff">T37</text></g>
+<path d="M561.4 141.0 C736.9 141.0 736.9 141.0 912.3 141.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M209.1 223.0 C270.1 223.0 270.1 163.0 331.2 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M429.0 141.0 C449.0 141.0 440.6 163.0 460.6 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M457.0 163.0 C477.0 163.0 440.6 163.0 460.6 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M429.0 141.0 C454.6 141.0 454.6 163.0 480.3 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M287.5 201.0 C307.5 201.0 268.1 81.0 288.1 81.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M286.0 81.0 C306.0 81.0 268.1 201.0 288.1 201.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M541.0 141.0 C567.6 141.0 567.6 81.0 594.2 81.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M592.2 163.0 C612.2 163.0 574.2 81.0 594.2 81.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M457.0 163.0 C477.0 163.0 460.3 201.0 480.3 201.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M479.2 163.0 C499.2 163.0 460.3 201.0 480.3 201.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M541.0 141.0 C699.2 141.0 699.2 201.0 857.5 201.0" fill="none" stroke="#c0392b" stroke-width="2" marker-end="url(#flc)" opacity="0.85"/>
+<path d="M209.1 223.0 C319.1 223.0 319.1 141.0 429.2 141.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M429.0 141.0 C449.0 141.0 409.2 141.0 429.2 141.0" fill="none" stroke="#c0392b" stroke-width="2" marker-end="url(#flc)" opacity="0.85"/>
+<path d="M230.4 201.0 C396.5 201.0 396.5 141.0 562.7 141.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M498.6 163.0 C638.9 163.0 638.9 163.0 779.2 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M342.3 201.0 C560.7 201.0 560.7 163.0 779.2 163.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M373.2 81.0 C576.2 81.0 576.2 81.0 779.2 81.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<path d="M778.8 81.0 C798.8 81.0 759.2 81.0 779.2 81.0" fill="none" stroke="#666" stroke-width="1.2" marker-end="url(#fl)" opacity="0.85"/>
+<rect x="190" y="300" width="14" height="14" fill="#4C78A8"/><text x="210" y="311">cpu_task</text>
+<rect x="320" y="300" width="14" height="14" fill="#F58518"/><text x="340" y="311">memory_task</text>
+<rect x="450" y="300" width="14" height="14" fill="#54A24B"/><text x="470" y="311">matrix_task</text>
+<rect x="580" y="300" width="14" height="14" fill="#B279A2"/><text x="600" y="311">sort_task</text>
+<rect x="710" y="300" width="14" height="14" fill="none" stroke="#d62728" stroke-width="2"/><text x="730" y="311">échec</text>
+<rect x="790" y="300" width="14" height="14" fill="none" stroke="#000" stroke-width="2"/><text x="810" y="311">chemin critique</text>
+</svg>

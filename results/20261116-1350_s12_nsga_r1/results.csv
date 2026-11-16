@@ -1,0 +1,13 @@
+experiment_id,task_id,workload,size,vm,machine_type,exit_code,start_s,end_s,duration_s,runtime_s
+20261116-1350_s12_nsga_r1,T1,cpu_task,20000000,cloudopt-vm3,n2-standard-2,0,0.369,14.486,14.116,14.111606477
+20261116-1350_s12_nsga_r1,T10,matrix_task,2000,cloudopt-vm1,e2-highcpu-2,0,24.364,47.588,23.224,23.162829277
+20261116-1350_s12_nsga_r1,T11,sort_task,50000000,cloudopt-vm1,e2-highcpu-2,0,33.578,44.577,10.999,9.672083097
+20261116-1350_s12_nsga_r1,T12,memory_task,1024,cloudopt-vm1,e2-highcpu-2,0,44.582,46.266,1.684,1.672990999
+20261116-1350_s12_nsga_r1,T2,cpu_task,40000000,cloudopt-vm3,n2-standard-2,0,0.370,26.665,26.296,26.291279576
+20261116-1350_s12_nsga_r1,T3,matrix_task,2000,cloudopt-vm1,e2-highcpu-2,0,0.000,24.359,24.359,24.294077223
+20261116-1350_s12_nsga_r1,T4,matrix_task,2500,cloudopt-vm3,n2-standard-2,0,14.489,45.298,30.809,30.743214515
+20261116-1350_s12_nsga_r1,T5,sort_task,50000000,cloudopt-vm1,e2-highcpu-2,0,0.002,11.045,11.042,9.681561989
+20261116-1350_s12_nsga_r1,T6,sort_task,100000000,cloudopt-vm1,e2-highcpu-2,0,11.050,33.573,22.524,19.836422551
+20261116-1350_s12_nsga_r1,T7,memory_task,1024,cloudopt-vm3,n2-standard-2,0,26.669,28.034,1.366,1.358435461
+20261116-1350_s12_nsga_r1,T8,memory_task,1536,cloudopt-vm3,n2-standard-2,0,28.038,30.129,2.092,2.082636896
+20261116-1350_s12_nsga_r1,T9,cpu_task,20000000,cloudopt-vm3,n2-standard-2,0,30.133,37.408,7.275,7.270973183

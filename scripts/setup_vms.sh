@@ -22,6 +22,7 @@ else
 fi
 ls bin/*_task > /dev/null 2>&1 || { echo "Erreur : compile d'abord les workloads dans bin/." >&2; exit 1; }
 
+PIDS=""
 EXIST=$(gcloud compute instances list --zones="$ZONE" --format="value(name)" < /dev/null)
 [ -f "$LOG" ] || echo "date,vm,machine_type,create_s,ssh_ready_s,deploy_s,total_s" > "$LOG"
 
@@ -35,8 +36,8 @@ for VM in $VMS; do
   (
     t0=$(date +%s.%N)
     gcloud compute instances create "$VM" --zone="$ZONE" --machine-type="$TYPE" \
-      --image-family=debian-12 --image-project=debian-cloud --quiet < /dev/null > /dev/null 2>&1 \
-      || { echo "[$VM] ECHEC de création" >&2; exit 1; }
+      --image-family=debian-12 --image-project=debian-cloud --quiet < /dev/null > /dev/null 2> "/tmp/setup_$VM.err" \
+      || { echo "[$VM] ECHEC de création :" >&2; grep -E "ERROR|message|-" "/tmp/setup_$VM.err" | head -5 >&2; exit 1; }
     t1=$(date +%s.%N)
     echo "[$VM] créée, attente de SSH..."
     n=0
@@ -54,7 +55,13 @@ for VM in $VMS; do
       'BEGIN { printf "%s,%s,%s,%.1f,%.1f,%.1f,%.1f\n", d, vm, ty, b - a, c - b, e - c, e - a }' >> "$LOG"
     awk -v vm="$VM" -v a="$t0" -v e="$t3" 'BEGIN { printf "[%s] prête en %.0f s\n", vm, e - a }'
   ) &
+  PIDS="$PIDS $!"
 done
-wait
+ECHECS=0
+for p in $PIDS; do wait "$p" || ECHECS=$((ECHECS + 1)); done
 echo "Temps de préparation enregistrés dans $LOG :"
 tail -n +2 "$LOG" | tail -n "$(echo "$VMS" | wc -w)"
+if [ "$ECHECS" -gt 0 ]; then
+  echo "Erreur : $ECHECS VM(s) non prête(s). Les VMs déjà créées restent allumées : ./scripts/delete_vms.sh" >&2
+  exit 1
+fi

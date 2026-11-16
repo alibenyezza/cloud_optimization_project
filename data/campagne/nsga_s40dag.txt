@@ -1,0 +1,7 @@
+scénario data/tasks_40_dag.csv : 40 tâches, 3 VMs, mode dépendances (DAG=data/tasks_40_dag.csv)
+seed=42 population=100 generations=500 croisement=0.9 mutation=1/40 fermer_vm=0.1
+front NSGA-II : 3 solutions
+  sol_001  makespan  145.89 s  coût 0.013093 USD  3 VM(s)  <- choisie (data/allocation_nsga.csv)
+  sol_002  makespan  195.24 s  coût 0.012617 USD  2 VM(s)
+  sol_003  makespan  199.49 s  coût 0.011486 USD  2 VM(s)
+Round-Robin : makespan 301.65 s, coût 0.023815 USD, 3 VM(s)

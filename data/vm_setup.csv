@@ -5,3 +5,8 @@ date,vm,machine_type,create_s,ssh_ready_s,deploy_s,total_s
 20261114-2213,cloudopt-vm3,n2-standard-2,10.6,24.1,6.8,41.5
 20261114-2213,cloudopt-vm2,e2-standard-2,10.7,27.9,6.8,45.4
 20261114-2213,cloudopt-vm1,e2-highcpu-2,12.0,28.0,7.7,47.7
+20261116-1347,cloudopt-vm3,n2-standard-2,14.4,22.7,8.3,45.4
+20261116-1347,cloudopt-vm1,e2-highcpu-2,16.1,28.6,8.3,53.0
+20261116-1347,cloudopt-vm2,e2-standard-2,16.5,29.0,7.9,53.3
+20261116-1420,cloudopt-vm1,e2-highcpu-2,14.7,26.2,8.5,49.4
+20261116-1420,cloudopt-vm2,e2-standard-2,14.4,34.6,8.0,57.0
