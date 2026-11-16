@@ -1,0 +1,4 @@
+vm,machine_type,vcpu,ram_mb,price_per_hour_usd
+cloudopt-s1,e2-standard-2,2,7950,0.0777
+cloudopt-s2,e2-standard-2,2,7950,0.0777
+cloudopt-s3,e2-standard-2,2,7950,0.0777

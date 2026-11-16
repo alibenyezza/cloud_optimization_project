@@ -1,0 +1,7 @@
+task_id,workload,size,depends_on
+D1,cpu_task,12000000,
+D2,matrix_task,2200,D1
+D3,memory_task,256,
+D4,cpu_task,12000000,D3
+D5,matrix_task,2200,D2;D4
+D6,memory_task,256,D5

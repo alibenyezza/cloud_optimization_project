@@ -1,0 +1,7 @@
+experiment_id,task_id,workload,size,vm,machine_type,exit_code,start_s,end_s,duration_s,runtime_s
+20261114-2213_dag_test_r1,D1,cpu_task,12000000,cloudopt-vm1,e2-highcpu-2,0,0.001,17.410,17.409,15.888756427
+20261114-2213_dag_test_r1,D2,matrix_task,2200,cloudopt-vm2,e2-standard-2,0,18.147,37.150,19.004,16.148504203
+20261114-2213_dag_test_r1,D3,memory_task,256,cloudopt-vm3,n2-standard-2,0,0.000,2.326,2.326,0.257482811
+20261114-2213_dag_test_r1,D4,cpu_task,12000000,cloudopt-vm1,e2-highcpu-2,0,3.032,20.315,17.282,15.85561586
+20261114-2213_dag_test_r1,D5,matrix_task,2200,cloudopt-vm2,e2-standard-2,0,37.217,54.799,17.582,16.206183607
+20261114-2213_dag_test_r1,D6,memory_task,256,cloudopt-vm3,n2-standard-2,0,55.345,57.603,2.258,0.247763921

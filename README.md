@@ -61,7 +61,7 @@ Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevé
                     benchmark.sh, benchmark_vms.sh, make_profiles.sh
     data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
     results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
-    docs/           INTERFACES.md (contrat des fichiers), write-ups des TD1 à TD3, rapport Word
+    docs/           INTERFACES.md (contrat des fichiers), rapport Word
     bin/            exécutables compilés (non versionnés)
 
 ## Prérequis
@@ -144,9 +144,9 @@ Scripts utiles séparément :
 
 ## Historique
 
-- TD1 : benchmarks locaux (`docs/write_up_TD1.txt`).
-- TD2 : première VM GCP, comparaison local / cloud (`docs/write_up_TD2.txt`).
-- TD3 : orchestration parallèle sur 3 VMs (`docs/write_up_TD3.txt`).
+- TD1 : benchmarks locaux.
+- TD2 : première VM GCP, comparaison local / cloud.
+- TD3 : orchestration parallèle sur 3 VMs.
 - TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
 - Partie B : scénario final, mesures sur les 3 types de VM, `profiles.csv` et validation du modèle (`docs/write_up_partie_B.txt`).
 - TD5 : file d'attente par VM, VMs à la demande, dépendances entre tâches, générateur de scénarios,
