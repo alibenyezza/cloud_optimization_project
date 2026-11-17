@@ -1,0 +1,13 @@
+experiment_id,task_id,workload,size,vm,machine_type,exit_code,start_s,end_s,duration_s,runtime_s
+20261117-1024_be12_greedy_r3,T1,cpu_task,20000000,cloudopt-vm3,n2-standard-2,0,0.263,7.669,7.406,7.402175495
+20261117-1024_be12_greedy_r3,T10,matrix_task,2000,cloudopt-vm2,e2-standard-2,0,0.368,15.460,15.092,15.025768793
+20261117-1024_be12_greedy_r3,T11,sort_task,50000000,cloudopt-vm2,e2-standard-2,0,15.464,22.060,6.596,5.496434654
+20261117-1024_be12_greedy_r3,T12,memory_task,1024,cloudopt-vm2,e2-standard-2,0,16.059,17.133,1.073,1.064685936
+20261117-1024_be12_greedy_r3,T2,cpu_task,40000000,cloudopt-vm2,e2-standard-2,0,0.367,16.055,15.688,15.680618991
+20261117-1024_be12_greedy_r3,T3,matrix_task,2000,cloudopt-vm1,e2-highcpu-2,0,0.000,15.644,15.644,15.575767462
+20261117-1024_be12_greedy_r3,T4,matrix_task,2500,cloudopt-vm1,e2-highcpu-2,0,0.000,26.713,26.713,26.630629815
+20261117-1024_be12_greedy_r3,T5,sort_task,50000000,cloudopt-vm1,e2-highcpu-2,0,15.648,23.133,7.485,6.52562377
+20261117-1024_be12_greedy_r3,T6,sort_task,100000000,cloudopt-vm3,n2-standard-2,0,0.263,17.260,16.997,14.437067399
+20261117-1024_be12_greedy_r3,T7,memory_task,1024,cloudopt-vm3,n2-standard-2,0,16.495,17.559,1.064,1.058871937
+20261117-1024_be12_greedy_r3,T8,memory_task,1536,cloudopt-vm3,n2-standard-2,0,14.744,16.492,1.748,1.7415018070000001
+20261117-1024_be12_greedy_r3,T9,cpu_task,20000000,cloudopt-vm3,n2-standard-2,0,7.672,14.741,7.069,7.06501448

@@ -1,0 +1,2 @@
+host: cloudopt-vm3
+{"task":"memory_task","size_mb":1024,"runtime_s":1.167926745,"checksum":15100387091034406912,"alloc_mb":1024.0381393432617}
