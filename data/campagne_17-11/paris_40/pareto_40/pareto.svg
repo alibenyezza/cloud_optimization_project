@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="460" font-family="sans-serif" font-size="12">
+<rect width="100%" height="100%" fill="white"/>
+<text x="70" y="25" font-size="15">Front de Pareto NSGA-II (prédiction)</text>
+<line x1="70" y1="390" x2="650" y2="390" stroke="black"/>
+<line x1="70" y1="70" x2="70" y2="390" stroke="black"/>
+<text x="70" y="408" text-anchor="middle">147</text>
+<text x="64" y="394" text-anchor="end">0.0110</text>
+<text x="215" y="408" text-anchor="middle">188</text>
+<text x="64" y="314" text-anchor="end">0.0144</text>
+<text x="360" y="408" text-anchor="middle">228</text>
+<text x="64" y="234" text-anchor="end">0.0178</text>
+<text x="505" y="408" text-anchor="middle">269</text>
+<text x="64" y="154" text-anchor="end">0.0212</text>
+<text x="650" y="408" text-anchor="middle">309</text>
+<text x="64" y="74" text-anchor="end">0.0246</text>
+<text x="360" y="435" text-anchor="middle">makespan prévu (s)</text>
+<text x="18" y="230" transform="rotate(-90 18 230)" text-anchor="middle">coût prévu (USD)</text>
+<circle cx="96.4" cy="323.1" r="3" fill="#bbbbbb"/>
+<circle cx="260.1" cy="375.5" r="3" fill="#bbbbbb"/>
+<circle cx="242.4" cy="348.8" r="3" fill="#bbbbbb"/>
+<circle cx="262.0" cy="374.9" r="3" fill="#bbbbbb"/>
+<circle cx="97.2" cy="322.8" r="3" fill="#bbbbbb"/>
+<circle cx="245.9" cy="347.6" r="3" fill="#bbbbbb"/>
+<circle cx="264.3" cy="374.2" r="3" fill="#bbbbbb"/>
+<circle cx="98.5" cy="322.1" r="3" fill="#bbbbbb"/>
+<circle cx="246.9" cy="347.2" r="3" fill="#bbbbbb"/>
+<circle cx="268.8" cy="372.8" r="3" fill="#bbbbbb"/>
+<circle cx="99.6" cy="321.6" r="3" fill="#bbbbbb"/>
+<circle cx="247.2" cy="347.1" r="3" fill="#bbbbbb"/>
+<circle cx="100.1" cy="321.4" r="3" fill="#bbbbbb"/>
+<circle cx="270.1" cy="372.4" r="3" fill="#bbbbbb"/>
+<circle cx="248.1" cy="346.8" r="3" fill="#bbbbbb"/>
+<circle cx="100.6" cy="321.2" r="3" fill="#bbbbbb"/>
+<circle cx="271.3" cy="372.0" r="3" fill="#bbbbbb"/>
+<circle cx="248.4" cy="346.7" r="3" fill="#bbbbbb"/>
+<circle cx="100.8" cy="321.1" r="3" fill="#bbbbbb"/>
+<circle cx="271.6" cy="371.9" r="3" fill="#bbbbbb"/>
+<circle cx="248.4" cy="346.7" r="3" fill="#bbbbbb"/>
+<circle cx="100.9" cy="321.1" r="3" fill="#bbbbbb"/>
+<circle cx="272.3" cy="371.7" r="3" fill="#bbbbbb"/>
+<circle cx="248.5" cy="346.7" r="3" fill="#bbbbbb"/>
+<circle cx="101.0" cy="321.0" r="3" fill="#bbbbbb"/>
+<circle cx="273.8" cy="371.2" r="3" fill="#bbbbbb"/>
+<circle cx="248.7" cy="346.6" r="3" fill="#bbbbbb"/>
+<circle cx="274.9" cy="370.9" r="3" fill="#bbbbbb"/>
+<circle cx="101.3" cy="320.9" r="3" fill="#bbbbbb"/>
+<circle cx="248.7" cy="346.6" r="3" fill="#bbbbbb"/>
+<circle cx="275.5" cy="370.7" r="3" fill="#bbbbbb"/>
+<circle cx="101.8" cy="320.7" r="3" fill="#bbbbbb"/>
+<circle cx="249.0" cy="346.5" r="3" fill="#bbbbbb"/>
+<circle cx="276.0" cy="370.5" r="3" fill="#bbbbbb"/>
+<circle cx="102.2" cy="320.5" r="3" fill="#bbbbbb"/>
+<circle cx="249.5" cy="346.3" r="3" fill="#bbbbbb"/>
+<circle cx="276.5" cy="370.4" r="3" fill="#bbbbbb"/>
+<circle cx="102.4" cy="320.4" r="3" fill="#bbbbbb"/>
+<circle cx="249.9" cy="346.2" r="3" fill="#bbbbbb"/>
+<circle cx="277.4" cy="370.1" r="3" fill="#bbbbbb"/>
+<circle cx="102.4" cy="320.4" r="3" fill="#bbbbbb"/>
+<circle cx="250.4" cy="346.0" r="3" fill="#bbbbbb"/>
+<circle cx="278.1" cy="369.9" r="3" fill="#bbbbbb"/>
+<circle cx="102.5" cy="320.4" r="3" fill="#bbbbbb"/>
+<circle cx="250.5" cy="346.0" r="3" fill="#bbbbbb"/>
+<circle cx="278.4" cy="369.8" r="3" fill="#bbbbbb"/>
+<circle cx="102.7" cy="320.2" r="3" fill="#bbbbbb"/>
+<circle cx="250.6" cy="345.9" r="3" fill="#bbbbbb"/>
+<circle cx="278.9" cy="369.6" r="3" fill="#bbbbbb"/>
+<circle cx="103.1" cy="320.1" r="3" fill="#bbbbbb"/>
+<circle cx="250.6" cy="345.9" r="3" fill="#bbbbbb"/>
+<circle cx="279.2" cy="369.5" r="3" fill="#bbbbbb"/>
+<circle cx="103.3" cy="320.0" r="3" fill="#bbbbbb"/>
+<circle cx="250.8" cy="345.9" r="3" fill="#bbbbbb"/>
+<circle cx="280.4" cy="369.2" r="3" fill="#bbbbbb"/>
+<circle cx="103.4" cy="319.9" r="3" fill="#bbbbbb"/>
+<circle cx="251.1" cy="345.8" r="3" fill="#bbbbbb"/>
+<circle cx="281.1" cy="368.9" r="3" fill="#bbbbbb"/>
+<circle cx="103.4" cy="319.9" r="3" fill="#bbbbbb"/>
+<circle cx="251.5" cy="345.6" r="3" fill="#bbbbbb"/>
+<circle cx="281.2" cy="368.9" r="3" fill="#bbbbbb"/>
+<circle cx="103.8" cy="319.8" r="3" fill="#bbbbbb"/>
+<circle cx="251.6" cy="345.6" r="3" fill="#bbbbbb"/>
+<circle cx="281.4" cy="368.9" r="3" fill="#bbbbbb"/>
+<circle cx="103.8" cy="319.8" r="3" fill="#bbbbbb"/>
+<circle cx="251.6" cy="345.6" r="3" fill="#bbbbbb"/>
+<circle cx="281.4" cy="368.8" r="3" fill="#bbbbbb"/>
+<circle cx="103.9" cy="319.7" r="3" fill="#bbbbbb"/>
+<circle cx="251.7" cy="345.6" r="3" fill="#bbbbbb"/>
+<circle cx="281.7" cy="368.8" r="3" fill="#bbbbbb"/>
+<circle cx="103.9" cy="319.7" r="3" fill="#bbbbbb"/>
+<circle cx="252.1" cy="345.4" r="3" fill="#bbbbbb"/>
+<circle cx="282.6" cy="368.5" r="3" fill="#bbbbbb"/>
+<circle cx="104.1" cy="319.6" r="3" fill="#bbbbbb"/>
+<circle cx="252.3" cy="345.3" r="3" fill="#bbbbbb"/>
+<circle cx="282.6" cy="368.5" r="3" fill="#bbbbbb"/>
+<circle cx="104.6" cy="319.4" r="3" fill="#bbbbbb"/>
+<circle cx="252.3" cy="345.3" r="3" fill="#bbbbbb"/>
+<circle cx="282.9" cy="368.4" r="3" fill="#bbbbbb"/>
+<circle cx="104.7" cy="319.4" r="3" fill="#bbbbbb"/>
+<circle cx="252.4" cy="345.3" r="3" fill="#bbbbbb"/>
+<circle cx="283.0" cy="368.4" r="3" fill="#bbbbbb"/>
+<circle cx="104.8" cy="319.3" r="3" fill="#bbbbbb"/>
+<circle cx="252.5" cy="345.3" r="3" fill="#bbbbbb"/>
+<circle cx="283.3" cy="368.3" r="3" fill="#bbbbbb"/>
+<circle cx="104.8" cy="319.3" r="3" fill="#bbbbbb"/>
+<circle cx="252.5" cy="345.3" r="3" fill="#bbbbbb"/>
+<circle cx="283.5" cy="368.2" r="3" fill="#bbbbbb"/>
+<circle cx="104.9" cy="319.3" r="3" fill="#bbbbbb"/>
+<circle cx="252.6" cy="345.2" r="3" fill="#bbbbbb"/>
+<circle cx="284.1" cy="368.0" r="3" fill="#bbbbbb"/>
+<circle cx="105.0" cy="319.2" r="3" fill="#bbbbbb"/>
+<circle cx="252.7" cy="345.2" r="3" fill="#bbbbbb"/>
+<circle cx="285.1" cy="367.7" r="3" fill="#bbbbbb"/>
+<circle cx="105.8" cy="318.9" r="3" fill="#bbbbbb"/>
+<circle cx="252.8" cy="345.2" r="3" fill="#bbbbbb"/>
+<circle cx="286.3" cy="367.3" r="3" fill="#bbbbbb"/>
+<circle cx="106.0" cy="318.8" r="3" fill="#bbbbbb"/>
+<circle cx="253.1" cy="345.1" r="3" fill="#bbbbbb"/>
+<circle cx="286.8" cy="367.2" r="3" fill="#bbbbbb"/>
+<circle cx="96.4" cy="323.1" r="4" fill="#1f5fbf"/>
+<text x="106.4" y="339.1" fill="#1f5fbf">3 VM</text>
+<circle cx="242.4" cy="348.8" r="4" fill="#1f5fbf"/>
+<text x="252.4" y="364.8" fill="#1f5fbf">2 VM</text>
+<circle cx="260.1" cy="375.5" r="4" fill="#1f5fbf"/>
+<text x="270.1" y="391.5" fill="#1f5fbf">2 VM</text>
+<circle cx="96.4" cy="323.1" r="9" fill="none" stroke="#1a9c3c" stroke-width="3"/>
+<rect x="619.1" y="80.0" width="9" height="9" fill="#d62728"/>
+<g transform="translate(110 80)"><circle cx="0" cy="-4" r="4" fill="#1f5fbf"/><text x="14" y="0">front NSGA-II</text></g>
+<g transform="translate(110 100)"><circle cx="0" cy="-4" r="7" fill="none" stroke="black"/><text x="14" y="0">vrai front (recherche exhaustive)</text></g>
+<g transform="translate(110 120)"><circle cx="0" cy="-4" r="3" fill="#bbbbbb"/><text x="14" y="0">population finale</text></g>
+<g transform="translate(110 140)"><circle cx="0" cy="-4" r="7" fill="none" stroke="#1a9c3c" stroke-width="3"/><text x="14" y="0">solution choisie</text></g>
+<g transform="translate(110 160)"><rect x="-4.5" y="-8.5" width="9" height="9" fill="#d62728"/><text x="14" y="0">Round-Robin</text></g>
+</svg>

@@ -1,0 +1,11 @@
+scénario data/tasks.csv : 12 tâches, 3 VMs, mode file par VM (QUEUE=1)
+seed=42 population=100 generations=500 croisement=0.9 mutation=1/12 fermer_vm=0.1
+front NSGA-II : 3 solutions
+  sol_001  makespan   27.82 s  coût 0.005137 USD  3 VM(s)
+  sol_002  makespan   40.97 s  coût 0.003399 USD  2 VM(s)  <- choisie (data/allocation_nsga.csv)
+  sol_003  makespan   82.63 s  coût 0.002875 USD  1 VM(s)
+Round-Robin : makespan 30.68 s, coût 0.005333 USD, 3 VM(s)
+recherche exhaustive : vrai front = 3 solutions, NSGA-II en a trouvé 3
+  vrai     makespan   27.82 s  coût 0.005137 USD  3 VM(s)
+  vrai     makespan   40.97 s  coût 0.003399 USD  2 VM(s)
+  vrai     makespan   82.63 s  coût 0.002875 USD  1 VM(s)

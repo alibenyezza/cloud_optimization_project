@@ -1,0 +1,59 @@
+SORTIES BRUTES DES TESTS DIRECTS - 16/11/2026 (soir)
+Projet GCP cloud-optimization-511007, zone europe-west9-a. Commandes tapées par Théotime depuis WSL.
+cpu_task --size 20000000 lancé SEUL directement sur la VM (sans orchestrateur ni autre tâche).
+
+
+--- Création 1 (17h09, setup_vms.sh -), après la démo de 17h29 ---
+
+$ for vm in cloudopt-vm1 cloudopt-vm2 cloudopt-vm3; do echo "== $vm"; gcloud compute ssh $vm --zone=europe-west9-a --command="lscpu | grep -E 'Model name|Model:|CPU family'" < /dev/null; done
+== cloudopt-vm1
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+CPU family:                              6
+Model:                                   79
+== cloudopt-vm2
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+CPU family:                              6
+Model:                                   79
+== cloudopt-vm3
+Model name:                              Intel(R) Xeon(R) CPU @ 2.80GHz
+CPU family:                              6
+Model:                                   85
+
+$ gcloud compute ssh cloudopt-vm3 --zone=europe-west9-a --command="lscpu | grep -E 'Stepping|Model name'; ~/cloud-optimization/bin/cpu_task --size 20000000" < /dev/null
+Model name:                              Intel(R) Xeon(R) CPU @ 2.80GHz
+Stepping:                                7
+{"task":"cpu_task","size":20000000,"runtime_s":19.9547897,"primes_found":1270607}
+
+
+--- Création 2 (17h49, setup_vms.sh -) ---
+
+== cloudopt-vm3
+Model name:                              Intel(R) Xeon(R) CPU @ 2.80GHz
+Stepping:                                7
+{"task":"cpu_task","size":20000000,"runtime_s":19.925887046,"primes_found":1270607}
+== cloudopt-vm1
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+Stepping:                                0
+{"task":"cpu_task","size":20000000,"runtime_s":25.374957967,"primes_found":1270607}
+== cloudopt-vm2
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+Stepping:                                0
+{"task":"cpu_task","size":20000000,"runtime_s":31.017261759,"primes_found":1270607}
+
+
+--- Création 3 : vm3 seule, avec --min-cpu-platform="Intel Ice Lake" (vers 17h55) ---
+
+$ gcloud compute instances create cloudopt-vm3 --zone=europe-west9-a --machine-type=n2-standard-2 --image-family=debian-12 --image-project=debian-cloud --min-cpu-platform="Intel Ice Lake"
+Created [.../zones/europe-west9-a/instances/cloudopt-vm3].
+
+$ gcloud compute ssh cloudopt-vm3 --zone=europe-west9-a --command="lscpu | grep -E 'Model name|Model:|Stepping'; ~/cloud-optimization/bin/cpu_task --size 20000000" < /dev/null
+Model name:                              Intel(R) Xeon(R) CPU @ 2.60GHz
+Model:                                   106
+Stepping:                                6
+{"task":"cpu_task","size":20000000,"runtime_s":7.142942824,"primes_found":1270607}
+
+
+--- Démos (résultats complets dans results/) ---
+17h29  vm3 Cascade Lake : RR 53,917 s / 0,006926 USD   NSGA-II 86,909 s / 0,006237 USD
+18h05  vm3 Ice Lake     : RR 78,400 s / 0,008608 USD   NSGA-II 48,186 s / 0,004419 USD
+Prévu par le modèle     : RR 82,97 s                   NSGA-II 55,61 s

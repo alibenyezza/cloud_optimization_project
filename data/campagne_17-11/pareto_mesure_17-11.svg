@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="592" font-family="sans-serif" font-size="12">
+<defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#777"/></marker></defs>
+<rect width="100%" height="100%" fill="white"/>
+<text x="80" y="28" font-size="15">Front de Pareto prévu et runs mesurés sur GCP (12 tâches)</text>
+<line x1="80" y1="390" x2="840" y2="390" stroke="black"/>
+<line x1="80" y1="50" x2="80" y2="390" stroke="black"/>
+<text x="80" y="408" text-anchor="middle">22</text>
+<text x="74" y="394" text-anchor="end">0,0026</text>
+<text x="270" y="408" text-anchor="middle">38</text>
+<text x="74" y="309" text-anchor="end">0,0034</text>
+<text x="460" y="408" text-anchor="middle">55</text>
+<text x="74" y="224" text-anchor="end">0,0041</text>
+<text x="650" y="408" text-anchor="middle">71</text>
+<text x="74" y="139" text-anchor="end">0,0048</text>
+<text x="840" y="408" text-anchor="middle">87</text>
+<text x="74" y="54" text-anchor="end">0,0056</text>
+<text x="460" y="428" text-anchor="middle">makespan (s)</text>
+<text x="20" y="220" transform="rotate(-90 20 220)" text-anchor="middle">coût (USD)</text>
+<polyline points="149.1,100.9 302.3,301.3 787.6,361.7" fill="none" stroke="#1f5fbf" stroke-dasharray="4 3" opacity="0.7"/>
+<circle cx="149.1" cy="100.9" r="4" fill="#1f5fbf"/>
+<text x="149.1" y="117.9" fill="#1f5fbf" font-size="11" text-anchor="middle">3 VM</text>
+<circle cx="302.3" cy="301.3" r="4" fill="#1f5fbf"/>
+<text x="302.3" y="318.3" fill="#1f5fbf" font-size="11" text-anchor="middle">2 VM</text>
+<circle cx="787.6" cy="361.7" r="4" fill="#1f5fbf"/>
+<text x="787.6" y="378.7" fill="#1f5fbf" font-size="11" text-anchor="middle">1 VM</text>
+<line x1="182.4" y1="78.3" x2="132.4" y2="112.3" stroke="#777" marker-end="url(#fl)"/>
+<rect x="177.4" y="73.3" width="10" height="10" fill="white" stroke="#d62728" stroke-width="2"/>
+<circle cx="132.4" cy="112.3" r="5" fill="#d62728"/>
+<line x1="174.0" y1="84.0" x2="136.9" y2="109.2" stroke="#777" marker-end="url(#fl)"/>
+<rect x="169.0" y="79.0" width="10" height="10" fill="white" stroke="#e67e00" stroke-width="2"/>
+<circle cx="136.9" cy="109.2" r="5" fill="#e67e00"/>
+<line x1="302.3" y1="301.3" x2="238.8" y2="324.8" stroke="#777" marker-end="url(#fl)"/>
+<rect x="297.3" y="296.3" width="10" height="10" fill="white" stroke="#1f5fbf" stroke-width="2"/>
+<circle cx="238.8" cy="324.8" r="5" fill="#1f5fbf"/>
+<circle cx="118.3" cy="121.8" r="9" fill="white" stroke="#d62728" stroke-width="1.5"/>
+<text x="118.3" y="125.8" fill="#d62728" font-size="11" font-weight="bold" text-anchor="middle">1</text>
+<circle cx="127.4" cy="95.1" r="9" fill="white" stroke="#e67e00" stroke-width="1.5"/>
+<text x="127.4" y="99.1" fill="#e67e00" font-size="11" font-weight="bold" text-anchor="middle">2</text>
+<circle cx="222.9" cy="330.7" r="9" fill="white" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="222.9" y="334.7" fill="#1f5fbf" font-size="11" font-weight="bold" text-anchor="middle">3</text>
+<g transform="translate(80 460)"><circle cx="0" cy="-4" r="4" fill="#1f5fbf"/><text x="14" y="0">front NSGA-II prévu (modèle)</text></g>
+<g transform="translate(330 460)"><rect x="-5" y="-9" width="10" height="10" fill="white" stroke="#555" stroke-width="2"/><text x="14" y="0">prévu pour le run</text></g>
+<g transform="translate(580 460)"><circle cx="0" cy="-4" r="5" fill="#555"/><text x="14" y="0">mesuré sur GCP</text></g>
+<g transform="translate(80 480)"><circle cx="0" cy="-4" r="5" fill="#d62728"/><text x="14" y="0">Round-Robin</text></g>
+<g transform="translate(330 480)"><circle cx="0" cy="-4" r="5" fill="#1f5fbf"/><text x="14" y="0">NSGA-II</text></g>
+<g transform="translate(580 480)"><circle cx="0" cy="-4" r="5" fill="#e67e00"/><text x="14" y="0">HEFT (glouton)</text></g>
+<text x="80" y="512" fill="#d62728">1. 10h22 Round-Robin (moyenne de 3 runs) : mesuré 26,4 s et 0,00504 USD ; prévu 30,7 s (+16 %)</text>
+<text x="80" y="532" fill="#e67e00">2. 10h24 HEFT (moyenne de 3 runs) : mesuré 26,8 s et 0,00507 USD ; prévu 30,0 s (+12 %)</text>
+<text x="80" y="552" fill="#1f5fbf">3. 10h26 NSGA-II (moyenne de 3 runs) : mesuré 35,5 s et 0,00319 USD ; prévu 41,0 s (+15 %)</text>
+</svg>

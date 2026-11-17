@@ -1,0 +1,2 @@
+host: cloudopt-vm1
+{"task":"sort_task","size":100000000,"runtime_s":12.915436021,"checksum":1499958742}

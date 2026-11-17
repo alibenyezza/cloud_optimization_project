@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1130" height="540" font-family="sans-serif" font-size="12">
+<defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs>
+<rect width="100%" height="100%" fill="white"/>
+<text x="80" y="30" font-size="15">Front de Pareto prévu et runs mesurés sur GCP (flèche : prévu vers mesuré)</text>
+<line x1="80" y1="460" x2="800" y2="460" stroke="black"/>
+<line x1="80" y1="80" x2="80" y2="460" stroke="black"/>
+<text x="80" y="478" text-anchor="middle">34</text>
+<text x="74" y="464" text-anchor="end">0.0040</text>
+<text x="260" y="478" text-anchor="middle">52</text>
+<text x="74" y="369" text-anchor="end">0.0053</text>
+<text x="440" y="478" text-anchor="middle">70</text>
+<text x="74" y="274" text-anchor="end">0.0067</text>
+<text x="620" y="478" text-anchor="middle">87</text>
+<text x="74" y="179" text-anchor="end">0.0080</text>
+<text x="800" y="478" text-anchor="middle">105</text>
+<text x="74" y="84" text-anchor="end">0.0094</text>
+<text x="440" y="505" text-anchor="middle">makespan (s)</text>
+<text x="22" y="270" transform="rotate(-90 22 270)" text-anchor="middle">coût (USD)</text>
+<polyline points="129.7,333.9 293.0,372.3 297.0,409.1 750.3,427.8" fill="none" stroke="#1f5fbf" stroke-dasharray="4 3"/>
+<circle cx="129.7" cy="333.9" r="4" fill="#1f5fbf"/>
+<text x="136.7" y="325.9" fill="#1f5fbf">3 VM</text>
+<circle cx="293.0" cy="372.3" r="4" fill="#1f5fbf"/>
+<text x="300.0" y="364.3" fill="#1f5fbf">2 VM</text>
+<circle cx="297.0" cy="409.1" r="4" fill="#1f5fbf"/>
+<text x="304.0" y="401.1" fill="#1f5fbf">2 VM</text>
+<circle cx="750.3" cy="427.8" r="4" fill="#1f5fbf"/>
+<text x="757.3" y="419.8" fill="#1f5fbf">1 VM</text>
+<rect x="573.2" y="118.2" width="10" height="10" fill="white" stroke="#d62728" stroke-width="2"/>
+<line x1="578.2" y1="123.2" x2="255.6" y2="265.2" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="255.6" cy="265.2" r="5" fill="#d62728"/>
+<rect x="292.0" y="404.1" width="10" height="10" fill="white" stroke="#1f5fbf" stroke-width="2"/>
+<line x1="297.0" y1="409.1" x2="214.8" y2="428.3" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="214.8" cy="428.3" r="5" fill="#1f5fbf"/>
+<rect x="573.2" y="106.7" width="10" height="10" fill="white" stroke="#d62728" stroke-width="2"/>
+<line x1="578.2" y1="111.7" x2="279.6" y2="252.0" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="279.6" cy="252.0" r="5" fill="#d62728"/>
+<rect x="292.0" y="399.1" width="10" height="10" fill="white" stroke="#1f5fbf" stroke-width="2"/>
+<line x1="297.0" y1="404.1" x2="618.7" y2="300.3" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="618.7" cy="300.3" r="5" fill="#1f5fbf"/>
+<rect x="573.2" y="106.9" width="10" height="10" fill="white" stroke="#d62728" stroke-width="2"/>
+<line x1="578.2" y1="111.9" x2="531.2" y2="134.0" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="531.2" cy="134.0" r="5" fill="#d62728"/>
+<rect x="292.0" y="398.3" width="10" height="10" fill="white" stroke="#1f5fbf" stroke-width="2"/>
+<line x1="297.0" y1="403.3" x2="220.7" y2="427.9" stroke="#555" marker-end="url(#fl)"/>
+<circle cx="220.7" cy="427.9" r="5" fill="#1f5fbf"/>
+<text x="540.2" y="138.0" fill="#d62728" font-size="11">18h05 demo_rr, vm3 Ice Lake : 78.4 s mesuré (prévu +6 %)</text>
+<text x="288.6" y="256.0" fill="#d62728" font-size="11">17h28 demo_rr, vm3 Cascade Lake : 53.9 s mesuré (prévu +54 %)</text>
+<text x="264.6" y="269.2" fill="#d62728" font-size="11">13h47 s12_rr x3 : 51.6 s mesuré (prévu +61 %)</text>
+<text x="627.7" y="304.3" fill="#1f5fbf" font-size="11">17h29 demo_nsga, vm3 Cascade Lake : 86.9 s mesuré (prévu -36 %)</text>
+<text x="229.7" y="431.9" fill="#1f5fbf" font-size="11">18h06 demo_nsga, vm3 Ice Lake : 48.2 s mesuré (prévu +15 %)</text>
+<text x="223.8" y="444.9" fill="#1f5fbf" font-size="11">13h50 s12_nsga x3 : 47.6 s mesuré (prévu +17 %)</text>
+<g transform="translate(830 90)"><circle cx="0" cy="-4" r="4" fill="#1f5fbf"/><text x="14" y="0">front NSGA-II prévu (modèle)</text></g>
+<g transform="translate(830 110)"><rect x="-5" y="-9" width="10" height="10" fill="white" stroke="#555" stroke-width="2"/><text x="14" y="0">prévu pour le run</text></g>
+<g transform="translate(830 130)"><circle cx="0" cy="-4" r="5" fill="#555"/><text x="14" y="0">mesuré sur GCP (moyenne si x3)</text></g>
+<g transform="translate(830 150)"><circle cx="0" cy="-4" r="5" fill="#d62728"/><text x="14" y="0">Round-Robin</text></g>
+<g transform="translate(830 170)"><circle cx="0" cy="-4" r="5" fill="#1f5fbf"/><text x="14" y="0">NSGA-II</text></g>
+<g transform="translate(830 190)"><circle cx="0" cy="-4" r="5" fill="#e67e00"/><text x="14" y="0">HEFT (glouton)</text></g>
+<text x="830" y="220" font-size="11" fill="#555">% : erreur du prévu par rapport au mesuré</text>
+</svg>

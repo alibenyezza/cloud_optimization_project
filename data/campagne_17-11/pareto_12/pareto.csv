@@ -1,0 +1,4 @@
+solution_id,makespan_pred_s,cost_pred_usd,mem_violation_mb,n_vms
+sol_001,27.82,0.005137,0,3
+sol_002,40.97,0.003399,0,2
+sol_003,82.63,0.002875,0,1

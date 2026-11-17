@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="330" font-family="Arial, sans-serif" font-size="12">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="190" y="28" font-size="18" font-weight="bold">Timeline – 20261116-1805_demo_rr_r1</text>
+<text x="190" y="50" fill="#555">makespan = 78.40 s, 3 VMs</text>
+<defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#666"/></marker><marker id="flc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<line x1="190.0" y1="62" x2="190.0" y2="250" stroke="#e5e5e5"/>
+<text x="190.0" y="266" text-anchor="middle" fill="#555">0</text>
+<line x1="289.5" y1="62" x2="289.5" y2="250" stroke="#e5e5e5"/>
+<text x="289.5" y="266" text-anchor="middle" fill="#555">10</text>
+<line x1="389.0" y1="62" x2="389.0" y2="250" stroke="#e5e5e5"/>
+<text x="389.0" y="266" text-anchor="middle" fill="#555">20</text>
+<line x1="488.5" y1="62" x2="488.5" y2="250" stroke="#e5e5e5"/>
+<text x="488.5" y="266" text-anchor="middle" fill="#555">30</text>
+<line x1="588.0" y1="62" x2="588.0" y2="250" stroke="#e5e5e5"/>
+<text x="588.0" y="266" text-anchor="middle" fill="#555">40</text>
+<line x1="687.4" y1="62" x2="687.4" y2="250" stroke="#e5e5e5"/>
+<text x="687.4" y="266" text-anchor="middle" fill="#555">50</text>
+<line x1="786.9" y1="62" x2="786.9" y2="250" stroke="#e5e5e5"/>
+<text x="786.9" y="266" text-anchor="middle" fill="#555">60</text>
+<line x1="886.4" y1="62" x2="886.4" y2="250" stroke="#e5e5e5"/>
+<text x="886.4" y="266" text-anchor="middle" fill="#555">70</text>
+<text x="580" y="284" text-anchor="middle" fill="#555">temps depuis le début de l'expérience (s)</text>
+<rect x="190" y="68" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="90" font-weight="bold">cloudopt-vm1</text>
+<text x="10" y="105" fill="#555">e2-highcpu-2</text>
+<g><title>T1 cpu_task : 0.03 → 36.05 s (36.02 s), code 0</title><rect x="190.3" y="72" width="358.3" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="194.3" y="85" fill="#ffffff">T1</text></g>
+<g><title>T4 matrix_task : 0.03 → 41.36 s (41.33 s), code 0</title><rect x="190.3" y="94" width="411.2" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="194.3" y="107" fill="#ffffff">T4</text></g>
+<g><title>T7 memory_task : 36.06 → 37.63 s (1.57 s), code 0</title><rect x="548.7" y="72" width="15.6" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T10 matrix_task : 37.63 → 51.72 s (14.09 s), code 0</title><rect x="564.4" y="72" width="140.2" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="568.4" y="85" fill="#ffffff">T10</text></g>
+<rect x="190" y="128" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="150" font-weight="bold">cloudopt-vm2</text>
+<text x="10" y="165" fill="#555">e2-standard-2</text>
+<g><title>T2 cpu_task : 0.09 → 78.40 s (78.31 s), code 0</title><rect x="190.9" y="132" width="779.1" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="194.9" y="145" fill="#ffffff">T2</text></g>
+<g><title>T5 sort_task : 0.09 → 11.40 s (11.31 s), code 0</title><rect x="190.9" y="154" width="112.5" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="194.9" y="167" fill="#ffffff">T5</text></g>
+<g><title>T8 memory_task : 11.40 → 13.78 s (2.38 s), code 0</title><rect x="303.5" y="154" width="23.7" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<g><title>T11 sort_task : 13.79 → 24.80 s (11.01 s), code 0</title><rect x="327.2" y="154" width="109.6" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="331.2" y="167" fill="#ffffff">T11</text></g>
+<rect x="190" y="188" width="780" height="48" fill="#f5f5f5"/>
+<text x="10" y="210" font-weight="bold">cloudopt-vm3</text>
+<text x="10" y="225" fill="#555">n2-standard-2</text>
+<g><title>T3 matrix_task : 0.00 → 17.61 s (17.61 s), code 0</title><rect x="190.0" y="192" width="175.3" height="18" rx="3" fill="#54A24B" stroke="none" stroke-width="2"/><text x="194.0" y="205" fill="#ffffff">T3</text></g>
+<g><title>T6 sort_task : 0.00 → 17.98 s (17.98 s), code 0</title><rect x="190.0" y="214" width="178.9" height="18" rx="3" fill="#B279A2" stroke="none" stroke-width="2"/><text x="194.0" y="227" fill="#ffffff">T6</text></g>
+<g><title>T9 cpu_task : 17.62 → 24.82 s (7.20 s), code 0</title><rect x="365.3" y="192" width="71.7" height="18" rx="3" fill="#4C78A8" stroke="none" stroke-width="2"/><text x="369.3" y="205" fill="#ffffff">T9</text></g>
+<g><title>T12 memory_task : 17.98 → 19.30 s (1.31 s), code 0</title><rect x="368.9" y="214" width="13.1" height="18" rx="3" fill="#F58518" stroke="none" stroke-width="2"/></g>
+<rect x="190" y="300" width="14" height="14" fill="#4C78A8"/><text x="210" y="311">cpu_task</text>
+<rect x="320" y="300" width="14" height="14" fill="#F58518"/><text x="340" y="311">memory_task</text>
+<rect x="450" y="300" width="14" height="14" fill="#54A24B"/><text x="470" y="311">matrix_task</text>
+<rect x="580" y="300" width="14" height="14" fill="#B279A2"/><text x="600" y="311">sort_task</text>
+<rect x="710" y="300" width="14" height="14" fill="none" stroke="#d62728" stroke-width="2"/><text x="730" y="311">échec</text>
+</svg>
