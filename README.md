@@ -113,6 +113,7 @@ Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
 - `QUEUE=1` à la place de `DAG=...` : file d'attente par VM sans dépendances.
 - `./scripts/scaling_experiment.sh TASKS.csv "1 2 3 4 6"` : même lot sur 1, 2, 3... VMs identiques.
 - `./scripts/demo.sh` : démo de soutenance (VMs allumées avant).
+- `./scripts/campaign.sh 3` : campagne finale Round-Robin contre NSGA-II (résultats : `data/campagne/BILAN.md`).
 - Règles exactes de chaque mode et surcoûts mesurés : docs/INTERFACES.md, section Exécution.
 
 Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
@@ -132,8 +133,8 @@ Scripts utiles séparément :
 ## Mesure : points de vigilance
 
 - **Surcoût SSH d'environ 3 s par tâche** (mesuré) : les horaires sont pris sur le PC contrôleur,
-  connexion SSH comprise. Le scénario utilise donc des tâches de 30 s à 2 min, pour que ce surcoût
-  reste faible devant le calcul. Le temps de calcul pur reste disponible (`runtime_s`).
+  connexion SSH comprise. En mode file (QUEUE=1), une seule connexion par VM, horaires pris sur la VM ;
+  le temps de calcul pur reste disponible (`runtime_s`).
 - **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; `run_all_queue.sh`
   et `run_all_dag.sh` en lancent au plus vcpu à la fois. Une VM à 2 vCPU n'a qu'un seul coeur physique :
   deux tâches de calcul sur la même VM se ralentissent (voir INTERFACES.md, section Exécution).
