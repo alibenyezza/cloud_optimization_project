@@ -1,15 +1,83 @@
-# Cloud Optimization – Ordonnancement de tâches sur GCP avec NSGA-II
+# Cloud Optimization - Placer des tâches sur GCP avec un algorithme génétique (NSGA-II)
 
-Projet semestriel ESILV A5 CCC. Question centrale : **étant donné des tâches et des VMs,
-où exécuter chaque tâche ?** On compare une allocation de référence (Round-Robin) à une
-allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : makespan et coût).
+Projet semestriel ESILV A4-CCC1, novembre 2026 - Maxime, Ali, Théotime.
+
+**La question :** on a des tâches à exécuter et 3 VMs Google Cloud différentes (vitesse, mémoire, prix).
+Sur quelle VM lancer chaque tâche pour finir vite **et** payer peu ?
+
+**Ce qu'on a fait :** un **algorithme génétique multi-objectif (NSGA-II)**, codé en Go, qui optimise
+en même temps le temps total (makespan) et le coût. On l'a comparé à deux baselines (Round-Robin et
+un glouton HEFT) en exécutant vraiment les allocations sur de vraies VMs GCP, 3 runs par stratégie.
+
+## Par où commencer
+
+| Quoi | Fichier |
+|---|---|
+| Le rapport complet (11 parties) | [docs/rapport_cloud_optimization.docx](docs/rapport_cloud_optimization.docx) |
+| **L'algorithme génétique NSGA-II** | [scheduler/nsga2.go](scheduler/nsga2.go) |
+| Le modèle qui évalue un plan sans lancer de VM | [model/model.go](model/model.go) (tests : [model/model_test.go](model/model_test.go)) |
+| Les résultats réels sur GCP | [data/campagne_17-11/BILAN.md](data/campagne_17-11/BILAN.md) puis [data/campagne/BILAN.md](data/campagne/BILAN.md) |
+| Les baselines | [scheduler/round_robin.go](scheduler/round_robin.go), [scheduler/greedy.go](scheduler/greedy.go) |
+| L'orchestrateur (exécution sur les VMs) | [scripts/run_experiment.sh](scripts/run_experiment.sh), [scripts/run_all_dag.sh](scripts/run_all_dag.sh) |
+| Le format de tous les fichiers échangés | [docs/INTERFACES.md](docs/INTERFACES.md) |
+| Le sujet | [SemestralProject.pdf](SemestralProject.pdf) |
+
+## Résultat principal
+
+40 tâches avec dépendances, 17/11 à Paris, 3 VMs (e2-highcpu-2, e2-standard-2, n2-standard-2),
+3 runs par stratégie, 0 échec ([BILAN, section 4](data/campagne_17-11/BILAN.md)) :
+
+| Stratégie | Makespan (3 runs) | Moyenne | Coût moyen |
+|---|---|---|---|
+| Round-Robin | 223,7 / 223,5 / 222,3 s | 223,2 s | 0,01860 USD |
+| Glouton (HEFT) | 150,1 / 144,3 / 144,6 s | 146,4 s | 0,01331 USD |
+| **NSGA-II (algorithme génétique)** | 144,2 / 147,2 / 141,9 s | **144,4 s** | **0,01318 USD** |
+
+- **NSGA-II est 35 % plus rapide et 29 % moins cher que Round-Robin**, et au niveau du glouton.
+- Sur 12 tâches, il trouve des plans **34,5 % moins chers** que Round-Robin, avec 2 VMs au lieu de 3.
+- Limite principale : NSGA-II n'est jamais meilleur que ses mesures. Un même type de VM peut tomber
+  sur un autre processeur d'un jour à l'autre (jusqu'à 5 fois plus rapide). Avec des mesures
+  périmées, il peut perdre (rapport, parties 9 et 10).
+
+Timeline d'un run réel (une bande par VM). Round-Robin : vm2 finit à 223,7 s, alors que vm1 et vm3
+ont fini à 136,1 s et 116,9 s. Le makespan, c'est la VM la plus lente.
+
+![Round-Robin, 40 tâches](results/20261117-1551_p40_rr_r1/gantt.svg)
+
+NSGA-II : la charge est équilibrée, les 3 VMs finissent entre 124,4 s et 144,2 s.
+
+![NSGA-II, 40 tâches](results/20261117-1610_p40_nsga_r1/gantt.svg)
+
+## L'algorithme génétique (NSGA-II)
+
+Code : [scheduler/nsga2.go](scheduler/nsga2.go). Rapport : partie 6.
+
+- **Chromosome** : `alloc[i]` = la VM de la tâche i.
+- **Deux objectifs à minimiser** : makespan et coût. Contrainte : la mémoire de chaque VM.
+- **Population** de 100 plans, **500 générations**, graine 42 (reproductible).
+- **Sélection** par tournoi, **croisement** à un point (0,9), **mutation** d'une tâche (1/n)
+  et mutation "fermer une VM" (0,1), qui fait passer de 3 VMs à 2.
+- **Classement** par fronts de Pareto et distance de crowding, élitisme. Une solution qui déborde
+  en mémoire perd toujours contre une solution valide.
+- **Evaluation** : chaque plan est simulé par le modèle commun ([model/model.go](model/model.go)),
+  en moins d'une milliseconde, sans lancer de VM.
+- **Résultat** : un front de compromis entre temps et coût, pas une seule solution. On exécute
+  le plan le plus proche du point idéal.
+- **Vérifié** : sur 12 tâches, le programme essaie aussi les 3^12 = 531 441 plans possibles.
+  NSGA-II retrouve les 4 plans du vrai front, en moins de 2 secondes.
+
+![Front de Pareto, 12 tâches](docs/figures/front_pareto_12_taches.png)
+
+Chaque point bleu est un plan possible. Chaque droite est une combinaison de VMs. En orange, le
+front trouvé par NSGA-II. Le carré rouge est Round-Robin : plus de 155 000 plans sont à la fois
+plus rapides et moins chers que lui.
 
 ## Architecture
 
     tasks.csv + machines.csv + profiles.csv
                     |
                     v
-       SCHEDULER (Round-Robin ou NSGA-II)
+       SCHEDULER (Round-Robin, glouton ou NSGA-II)
                     |
                     v
              allocation_*.csv
@@ -23,161 +91,90 @@ allocation optimisée par **NSGA-II** (algorithme génétique multi-objectif : m
            v             v             v
     results/<id>/results.csv + gantt.svg  ->  data/experiments.csv
 
-- **Workloads** (`workloads/`) : programmes Go compilés (cpu_task, memory_task, matrix_task, sort_task).
+- **Workloads** (`workloads/`) : 4 programmes Go compilés (cpu_task, memory_task, matrix_task, sort_task).
 - **Scheduler** (`scheduler/`) : décide sur quelle VM tourne chaque tâche. Ne lance rien.
-- **Orchestrateur** (`scripts/`) : exécute une allocation en parallèle par SSH et collecte les résultats.
-  Il ne prend aucune décision : n'importe quelle allocation au bon format peut être exécutée.
+- **Orchestrateur** (`scripts/`) : exécute une allocation par SSH et collecte les résultats.
+  Il ne décide rien : n'importe quelle allocation au bon format peut être exécutée.
   3 modes : tout en même temps (`run_all.sh`), file d'attente par VM (`run_all_queue.sh`),
   file d'attente + dépendances entre tâches (`run_all_dag.sh`).
 
-Les formats de tous les fichiers sont définis dans **[docs/INTERFACES.md](docs/INTERFACES.md)**.
-
 ## Infrastructure
 
-Projet GCP `cloud-optimization-511007`, zone `europe-west9-a` (Paris), image Debian 12.
-Zone et projet sont définis une seule fois dans `scripts/config.sh`.
+Projet GCP `cloud-optimization-511007`, zone `europe-west9-a` (Paris), Debian 12.
+La zone est définie une seule fois dans `scripts/config.sh`.
 
-| VM | Type | vCPU | RAM (Linux) | CPU |
+| VM | Type | vCPU | RAM (Linux) | Prix |
 |---|---|---|---|---|
-| cloudopt-vm1 | e2-highcpu-2 | 2 | 1976 Mo | Xeon 2.20 GHz |
-| cloudopt-vm2 | e2-standard-2 | 2 | 7950 Mo | Xeon 2.20 GHz |
-| cloudopt-vm3 | n2-standard-2 | 2 | 7950 Mo | Xeon 2.80 GHz |
+| cloudopt-vm1 | e2-highcpu-2 | 2 | 1976 Mo | 0,0574 USD/h |
+| cloudopt-vm2 | e2-standard-2 | 2 | 7950 Mo | 0,0777 USD/h |
+| cloudopt-vm3 | n2-standard-2 | 2 | 7950 Mo | 0,1127 USD/h |
 
-Les VMs sont volontairement hétérogènes : vm1 est peu chère mais limitée en mémoire,
-vm3 a un CPU plus rapide mais coûte plus cher. Fiches détaillées : `data/machine_<vm>.txt`.
-Prix horaires (`data/machines.csv`) : tarifs à la demande europe-west9, relevés le 23/10/2026 sur gcloud-compute.com (à recouper avec la console GCP).
+vm1 est la moins chère mais a peu de mémoire, vm3 a le processeur le plus rapide mais coûte deux fois
+plus. Prix à la demande de la région Paris, relevés le 23/10/2026 (`data/machines.csv`).
+Le processeur dépend du jour : `scripts/setup_vms_icelake.sh` impose un Ice Lake pour la n2
+(impossible pour les e2) et affiche le processeur de chaque VM.
 
 ## Arborescence
 
+    scheduler/      nsga2.go (algorithme génétique), round_robin.go et greedy.go (baselines)
+    model/          modèle commun : simule l'orchestrateur (temps, coût, mémoire), avec tests
     workloads/      sources Go des 4 workloads
-    scheduler/      round_robin.go (baseline), nsga2.go (NSGA-II, sorties dans data/pareto/)
-    model/          modèle commun : simulation des règles de l'orchestrateur (predict et nsga2), tests
-    tools/gantt/    timeline SVG d'une expérience (flèches de dépendance et chemin critique si tasks.csv)
-    tools/predict/  makespan, coût et mémoire prévus d'une allocation (modèle de INTERFACES.md)
-    tools/gen_tasks/ génération de scénarios reproductibles (graine), avec ou sans dépendances
-    scripts/        config.sh, create_vms.sh, setup_vms.sh, deploy_all.sh, delete_vms.sh,
-                    run_task.sh, run_all.sh, run_all_queue.sh, run_all_dag.sh,
-                    collect_results.sh, run_experiment.sh, scaling_experiment.sh, demo.sh,
-                    benchmark.sh, benchmark_vms.sh, make_profiles.sh
+    scripts/        création des VMs, exécution, collecte, campagnes, démo
+    tools/          gantt (timeline SVG), predict, gen_tasks, order, pareto_mesure
     data/           tasks.csv, machines.csv, profiles.csv, allocations, experiments.csv, pareto/
-    results/        un dossier par expérience (.out, .err, .status, results.csv, gantt.svg)
-    docs/           INTERFACES.md (contrat des fichiers), rapport Word
-    bin/            exécutables compilés (non versionnés)
+    data/campagne/        campagne du 16/11 (BILAN.md)
+    data/campagne_17-11/  expérience processeur du 16/11 et campagnes du 17/11 (BILAN.md)
+    results/        un dossier par run (sorties des tâches, results.csv, gantt.svg)
+    docs/           rapport Word, INTERFACES.md, write-up des mesures (partie B)
+    results_rr/, tests_td4/   baseline Round-Robin du TD4 et ses tests
 
-## Prérequis
+## Reproduire
 
-Ubuntu (testé sous WSL2), Go 1.26, Google Cloud CLI authentifié sur le projet
-(`gcloud auth login --no-launch-browser` sous WSL, puis `gcloud config set project cloud-optimization-511007`).
+Prérequis : Ubuntu (testé sous WSL2), Go 1.22 ou plus, Google Cloud CLI connecté au projet.
 
-## Reproduire une expérience
-
-    # 1. Compiler
+    # 1. Compiler et tester
     for w in cpu_task memory_task matrix_task sort_task; do go build -o bin/$w workloads/$w.go; done
     go build -o bin/round_robin_scheduler scheduler/round_robin.go
-    go build -o bin/gantt tools/gantt/main.go
-    go build -o bin/predict tools/predict/main.go
+    go build -o bin/greedy scheduler/greedy.go
     go build -o bin/nsga2 scheduler/nsga2.go
-    go test ./model                                  # tests du modèle (cas calculés à la main)
+    go build -o bin/predict tools/predict/main.go
+    go build -o bin/gantt tools/gantt/main.go
+    go test ./model
 
-    # 2. (Seulement si profiles.csv n'est pas à jour pour ce tasks.csv) Mesurer chaque tâche
-    #    sur chaque type de VM (5 fois, environ 20 min), puis faire profiles.csv
-    ./scripts/create_vms.sh && sleep 60 && ./scripts/deploy_all.sh
-    ./scripts/benchmark_vms.sh 5
-    ./scripts/make_profiles.sh
-
-    # 3. Calculer les allocations (Round-Robin et NSGA-II) et leurs prédictions
+    # 2. Calculer les allocations (rien ne tourne sur GCP ici)
     ./bin/round_robin_scheduler data/tasks.csv data/machines.csv data/allocation_rr.csv
-    ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_rr.csv
-    ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv 42     # -> data/allocation_nsga.csv
+    ./bin/greedy data/tasks.csv data/machines.csv data/profiles.csv data/allocation_greedy.csv
+    ./bin/nsga2 data/tasks.csv data/machines.csv data/profiles.csv 42     # -> data/pareto/, data/allocation_nsga.csv
     ./bin/predict data/tasks.csv data/machines.csv data/profiles.csv data/allocation_nsga.csv
 
-    # 4. Créer seulement les VMs utilisées par l'allocation, attendre SSH, déployer (temps mesuré)
-    ./scripts/setup_vms.sh data/allocation_rr.csv
-
-    # 5. Exécuter, collecter et tracer la timeline (3 répétitions, mode file), avec makespan et coût prévus
-    QUEUE=1 ./scripts/run_experiment.sh data/allocation_rr.csv rr 3 MAKESPAN_PREVU COUT_PREVU
-    QUEUE=1 ./scripts/run_experiment.sh data/allocation_nsga.csv nsga 3 MAKESPAN_PREVU COUT_PREVU
-
-    # 6. Supprimer les VMs en fin de session (elles coûtent même inactives)
+    # 3. Créer les VMs (n2 en Ice Lake), exécuter 3 runs, supprimer les VMs
+    ./scripts/setup_vms_icelake.sh -
+    QUEUE=1 ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
+    QUEUE=1 ./scripts/run_experiment.sh data/allocation_nsga.csv nsga 3
     ./scripts/delete_vms.sh
 
-### Avec beaucoup de tâches et des dépendances
+- Avec dépendances : `DAG=data/tasks.csv` à la place de `QUEUE=1`.
+- `./scripts/campaign.sh 3` : campagne complète Round-Robin contre NSGA-II en une commande.
+- `./scripts/demo.sh` : démo en 3 min (VMs créées avant).
+- `./scripts/benchmark_vms.sh 5` puis `./scripts/make_profiles.sh` : remesurer `profiles.csv`.
 
-    go build -o bin/gen_tasks tools/gen_tasks/main.go
-    ./bin/gen_tasks -n 40 -seed 1 -deps 0.4 -out data/tasks_40_dag.csv     # 40 tâches, 40 % avec dépendances
-    ./bin/round_robin_scheduler data/tasks_40_dag.csv data/machines.csv data/allocation_rr.csv
-    ./scripts/setup_vms.sh data/allocation_rr.csv                            # seulement les VMs utilisées, temps mesuré
-    DAG=data/tasks_40_dag.csv ./scripts/run_experiment.sh data/allocation_rr.csv rr 3
-    ./scripts/delete_vms.sh
+Chaque run produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` (allocation exécutée, sortie de chaque
+tâche, `results.csv`, `gantt.svg`) et ajoute une ligne dans `data/experiments.csv` : makespan et coût
+mesurés, valeurs prévues, nombre de tâches et d'échecs.
 
-- `QUEUE=1` à la place de `DAG=...` : file d'attente par VM sans dépendances.
-- `./scripts/scaling_experiment.sh TASKS.csv "1 2 3 4 6"` : même lot sur 1, 2, 3... VMs identiques.
-- `./scripts/demo.sh` : démo de soutenance (VMs allumées avant).
-- `./scripts/campaign.sh 3` : campagne finale Round-Robin contre NSGA-II (résultats : `data/campagne/BILAN.md`).
-- Règles exactes de chaque mode et surcoûts mesurés : docs/INTERFACES.md, section Exécution.
+## Points de mesure importants
 
-Chaque répétition produit `results/<AAAAMMJJ-HHMM>_<strategie>_r<k>/` avec :
-- `allocation.csv` : l'allocation exacte exécutée ;
-- `<TASK>.out`, `.err`, `.status` : sortie, erreurs, code de retour et horaires de chaque tâche ;
-- `results.csv` : une ligne par tâche, temps relatifs au début de l'expérience ;
-- `gantt.svg` : timeline (une bande par VM, tâches simultanées empilées, échecs en rouge).
-
-`data/experiments.csv` reçoit une ligne par expérience : makespan réel, coût réel,
-valeurs prédites, nombre de tâches et d'échecs. C'est la base de la comparaison Round-Robin / NSGA-II.
-
-Scripts utiles séparément :
-- `./scripts/run_all.sh ALLOCATION.csv [EXPERIMENT_ID]` : exécution seule ;
-- `./scripts/collect_results.sh EXPERIMENT_ID STRATEGY` : collecte seule ;
-- `./bin/gantt results/<id>/results.csv sortie.svg` : timeline seule.
-
-## Mesure : points de vigilance
-
-- **Surcoût SSH d'environ 3 s par tâche** (mesuré) : les horaires sont pris sur le PC contrôleur,
-  connexion SSH comprise. En mode file (QUEUE=1), une seule connexion par VM, horaires pris sur la VM ;
-  le temps de calcul pur reste disponible (`runtime_s`).
-- **Partage du CPU** : `run_all.sh` lance en même temps toutes les tâches d'une VM ; `run_all_queue.sh`
-  et `run_all_dag.sh` en lancent au plus vcpu à la fois. Une VM à 2 vCPU n'a qu'un seul coeur physique :
-  deux tâches de calcul sur la même VM se ralentissent (voir INTERFACES.md, section Exécution).
-- **Démarrage d'une VM** : environ 46 s (création + SSH prêt + déploiement), mesuré dans `data/vm_setup.csv`.
-- **Variabilité** : un même scénario varie d'environ 1 à 2 % d'une exécution à l'autre ;
-  chaque stratégie est donc répétée plusieurs fois.
-- **Validation** : chaque `.out` commence par `host: <nom de la VM>`, ce qui prouve où la tâche a tourné.
+- **SSH** : environ 3 s par tâche. En mode file (`QUEUE=1`), une seule connexion par VM et horaires pris sur la VM.
+- **1 coeur par VM** : une VM à 2 vCPU n'a qu'un coeur physique. Deux tâches de calcul ensemble se ralentissent.
+- **Démarrage d'une VM** : environ 46 s, mesuré dans `data/vm_setup.csv` et compté dans le coût.
+- **Variabilité** : 1 à 2 % entre deux runs, donc 3 runs par stratégie.
+- **Preuve d'exécution** : chaque sortie commence par `host: <nom de la VM>`.
 
 ## Historique
 
-- TD1 : benchmarks locaux.
-- TD2 : première VM GCP, comparaison local / cloud.
-- TD3 : orchestration parallèle sur 3 VMs.
-- TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`, résultats dans `results_rr/`).
-- Partie B : scénario final, mesures sur les 3 types de VM, `profiles.csv` et validation du modèle (`docs/write_up_partie_B.txt`).
-- TD5 : file d'attente par VM, VMs à la demande, dépendances entre tâches, générateur de scénarios,
-  expérience sur le nombre de VMs (3 VMs plus lentes que 2 sur le scénario de démo).
-- Partie C : NSGA-II (`scheduler/nsga2.go`), vérifié par recherche exhaustive sur le scénario de 12 tâches.
-
-## Rapport (Word)
-
-Le rapport est dans `docs/rapport_cloud_optimization.docx`. Les parties 3, 4, 5 et le début
-de la 10 sont faites et à jour du TD5 (Maxime). Les parties marquées "A compléter" sont à écrire par chacun selon
-sa partie du projet.
-
-Règles d'écriture, pour que tout le rapport ait le même style :
-
-- En français.
-- Uniquement des caractères tapables sur un clavier AZERTY : accents et caractères spéciaux
-  du clavier oui, mais pas de tiret long, de flèche, de guillemets « », de œ ni de majuscule
-  accentuée. On écrit "-" , "->", "coeur", "A compléter".
-- Style minimaliste : court, clair, concis. Des phrases simples, on écrit "on".
-  Le texte doit sonner comme nous, pas comme une IA.
-- Chaque choix technique est justifié avec son avantage ET son inconvénient.
-- Chaque chiffre vient d'une vraie mesure (experiments.csv, results.csv, profiles.csv),
-  jamais d'une estimation.
-- Les limites et les résultats inattendus sont expliqués, pas cachés.
-- On garde le plan en 11 parties : c'est celui que demande le sujet pour la soutenance.
-- Objectif : chaque partie doit répondre à un critère de la grille de notation (fin du sujet).
-
-Un fichier Word ne se fusionne pas avec git. Pour ne pas perdre de travail :
-
-1. Prévenir les autres avant de l'ouvrir ("je prends le Word").
-2. `git pull` avant de commencer.
-3. Faire ses modifications.
-4. `git add`, `git commit`, `git push` tout de suite, puis prévenir que c'est libre.
+- TD1 : benchmarks locaux. TD2 : première VM GCP. TD3 : orchestration sur 3 VMs.
+- TD4 : baseline Round-Robin (`scheduler/round_robin.go`, tests dans `tests_td4/`).
+- TD5 : file d'attente par VM, VMs à la demande, dépendances entre tâches, générateur de scénarios.
+- Mesures : scénario final, mesures sur les 3 types de VM, `profiles.csv`, modèle commun (`docs/write_up_partie_B.txt`).
+- Optimisation : NSGA-II, vérifié par recherche exhaustive sur 12 tâches, puis glouton HEFT.
+- Campagnes réelles : 16/11 (`data/campagne/`), puis 16/11 au soir et 17/11 (`data/campagne_17-11/`).
