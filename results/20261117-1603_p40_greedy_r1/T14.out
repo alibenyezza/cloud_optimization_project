@@ -1,0 +1,2 @@
+host: cloudopt-vm3
+{"task":"cpu_task","size":20000000,"runtime_s":7.095423216,"primes_found":1270607}

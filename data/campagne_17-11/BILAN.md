@@ -1,7 +1,7 @@
 # Bilan : démos du 16/11 et campagne du 17/11 (Théotime)
 
-Deux séries de mesures, après la campagne de Maxime (`data/campagne/BILAN.md`).
-Toutes les lignes sont dans `data/experiments.csv` (stratégies `demo_*`, `be12_*`, `be40_*`),
+Trois séries de mesures, après la campagne de Maxime (`data/campagne/BILAN.md`).
+Toutes les lignes sont dans `data/experiments.csv` (stratégies `demo_*`, `be12_*`, `be40_*`, `p40_*`),
 les sorties et Gantt dans `results/20261116-*_demo_*` et `results/20261117-*`.
 
 ## 1. Expérience contrôlée (16/11 au soir, Paris) : seul le processeur de vm3 change
@@ -54,3 +54,24 @@ Glouton, 40 tâches : T07 (memory_task 1024, environ 1 Go) a été tuée par Lin
 Le modèle prévoyait 0 dépassement : dans sa simulation, T07 et T32 ne se chevauchaient pas. Les tâches
 ont fini plus tôt que prévu et les chevauchements ont changé. La mémoire n'est vérifiée qu'aux instants
 prévus. Piste : vérifier le pire cas (les 2 tâches les plus gourmandes d'une VM ensemble).
+
+## 4. 40 tâches à Paris avec les bons processeurs (17/11 après-midi, 3 runs par stratégie)
+
+VMs créées avec `scripts/setup_vms_icelake.sh -` en `europe-west9-a`. Cette fois vm1 et vm2 sont des
+Intel Broadwell (Model 79) et vm3 un Ice Lake (Model 106) : les mêmes processeurs que les profils du 13/11.
+Vérifié avant les runs : cpu_task 20M en 25,3 s (vm1), 24,3 s (vm2) et 7,0 s (vm3), contre 25,4 / 24,9 / 7,2 s
+dans `data/profiles.csv`. On a donc gardé les profils de l'équipe, sans les remesurer.
+Allocations et front NSGA-II (graine 42) : `paris_40/`.
+
+| Stratégie | Runs | Moyenne | Coût moyen | Prévu | Echecs |
+|---|---|---|---|---|---|
+| Round-Robin | 223,7 / 223,5 / 222,3 s | 223,2 s | 0,01860 USD | 301,7 s (+35 %) | 0 |
+| Glouton (HEFT) | 150,1 / 144,3 / 144,6 s | 146,4 s | 0,01331 USD | 169,1 s (+16 %) | 0 |
+| NSGA-II | 144,2 / 147,2 / 141,9 s | 144,4 s | 0,01318 USD | 154,4 s (+7 %) | 0 |
+
+- NSGA-II est 35 % plus rapide et 29 % moins cher que Round-Robin. Le 16/11, sur les mêmes 40 tâches,
+  il perdait (179,1 s contre 163,8 s) parce que vm2 n'avait plus le processeur des profils.
+- NSGA-II et le glouton sont à 1 % l'un de l'autre, dans la variabilité des runs (142 à 150 s).
+- Le modèle classe bien les trois stratégies et prévoit le mieux NSGA-II (+7 %).
+- 3 runs par stratégie : écarts de 1 à 6 s. Le prévu de NSGA-II (154,4 s, contre 146,5 s avant) a bougé
+  parce que `vm_setup.csv` contenait les préparations du jour, ce qui change le coût des solutions.
